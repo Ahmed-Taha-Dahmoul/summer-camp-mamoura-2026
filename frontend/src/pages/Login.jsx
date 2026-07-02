@@ -31,9 +31,12 @@ function Login() {
     setError('');
     
     try {
+      const normalizedUsername = formData.username.toLowerCase().trim();
+      const normalizedInviteCode = formData.invite_code.toUpperCase().trim();
+
       if (isLogin === 'login') {
-        const response = await axios.post('http://127.0.0.1:8000/api/accounts/login/', {
-          username: formData.username,
+        const response = await axios.post(`/api/accounts/login/`, {
+          username: normalizedUsername,
           password: formData.password
         });
         localStorage.setItem('access_token', response.data.access);
@@ -45,12 +48,14 @@ function Login() {
 
         const payload = {
           ...formData,
+          username: normalizedUsername,
+          invite_code: normalizedInviteCode,
           role: selectedRole
         };
-        await axios.post('http://127.0.0.1:8000/api/accounts/register/', payload);
+        await axios.post(`/api/accounts/register/`, payload);
         // auto login after register
-        const loginRes = await axios.post('http://127.0.0.1:8000/api/accounts/login/', {
-          username: formData.username,
+        const loginRes = await axios.post(`/api/accounts/login/`, {
+          username: normalizedUsername,
           password: formData.password
         });
         localStorage.setItem('access_token', loginRes.data.access);

@@ -32,7 +32,7 @@ function GroupProfile() {
   useEffect(() => {
     const fetchGroup = async () => {
       try {
-        const response = await axios.get(`http://127.0.0.1:8000/api/camp/groups/${id}/`, {
+        const response = await axios.get(`/api/camp/groups/${id}/`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` }
         });
         setGroup(response.data);
@@ -49,8 +49,8 @@ function GroupProfile() {
   if (error) return <div className="container mt-8 text-center text-red-500">{error}</div>;
   if (!group) return null;
 
-  const bannerUrl = group.banner ? (group.banner.startsWith('http') ? group.banner : `http://127.0.0.1:8000${group.banner}`) : null;
-  const avatarUrl = group.profile_picture ? (group.profile_picture.startsWith('http') ? group.profile_picture : `http://127.0.0.1:8000${group.profile_picture}`) : null;
+  const bannerUrl = group.banner ? (group.banner ? group.banner.replace(/^https?:\/\/[^\/]+/, '') : '') : null;
+  const avatarUrl = group.profile_picture ? (group.profile_picture ? group.profile_picture.replace(/^https?:\/\/[^\/]+/, '') : '') : null;
 
   const renderAvatar = (preset) => {
     switch(preset) {
@@ -158,8 +158,16 @@ function GroupProfile() {
             {/* Arif */}
             {group.arif_details && (
               <div className="roster-card" style={{ borderColor: 'rgba(234, 179, 8, 0.3)' }}>
-                <div className="roster-avatar" style={{ backgroundColor: 'rgba(234, 179, 8, 0.1)', color: '#eab308' }}>
-                  {group.arif_details.first_name?.[0] || group.arif_details.username[0]}
+                <div className="roster-avatar" style={{ backgroundColor: 'rgba(234, 179, 8, 0.1)', color: '#eab308', overflow: 'hidden' }}>
+                  {group.arif_details.profile_picture ? (
+                    <img 
+                      src={group.arif_details.profile_picture.replace(/^https?:\/\/[^\/]+/, '')} 
+                      alt={group.arif_details.username} 
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                    />
+                  ) : (
+                    group.arif_details.first_name?.[0] || group.arif_details.username[0]
+                  )}
                 </div>
                 <div>
                   <div className="font-bold">{group.arif_details.first_name || group.arif_details.username} {group.arif_details.last_name}</div>
@@ -171,8 +179,16 @@ function GroupProfile() {
             {/* Members */}
             {group.members && group.members.map(member => (
               <div key={member.id} className="roster-card">
-                <div className="roster-avatar">
-                  {member.user.first_name?.[0] || member.user.username[0]}
+                <div className="roster-avatar" style={{ overflow: 'hidden', backgroundColor: 'rgba(255,255,255,0.1)' }}>
+                  {member.user.profile_picture ? (
+                    <img 
+                      src={member.user.profile_picture.replace(/^https?:\/\/[^\/]+/, '')} 
+                      alt={member.user.username} 
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                    />
+                  ) : (
+                    member.user.first_name?.[0] || member.user.username[0]
+                  )}
                 </div>
                 <div>
                   <div className="font-bold">{member.user.first_name || member.user.username} {member.user.last_name}</div>

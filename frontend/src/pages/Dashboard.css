@@ -57,3 +57,19 @@
 .singer-icon { color: #ec4899; }
 .leader-icon { color: #eab308; }
 .member-icon { color: #9ca3af; }
+
+@media (max-width: 768px) {
+  .dashboard {
+    padding: 1rem 0;
+  }
+  .dashboard-header h1 {
+    font-size: 2rem;
+  }
+  .grid-cols-2 { 
+    grid-template-columns: 1fr; 
+  }
+  .flex-col-mobile {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+}

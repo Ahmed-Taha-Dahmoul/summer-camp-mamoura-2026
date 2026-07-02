@@ -23,3 +23,14 @@ class InstantaneReaction(models.Model):
 
     def __str__(self):
         return f"{self.user.username} reacted {self.emoji} to {self.post}"
+
+class InstantaneView(models.Model):
+    post = models.ForeignKey(InstantanePost, on_delete=models.CASCADE, related_name='views')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    viewed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('post', 'user')
+
+    def __str__(self):
+        return f"{self.user.username} viewed {self.post}"

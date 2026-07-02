@@ -23,7 +23,7 @@ const RoleIcon = ({ role }) => {
   }
 };
 
-function Dashboard() {
+function Dashboard({ hideHeader = false }) {
   const [profile, setProfile] = useState(null);
   const [groups, setGroups] = useState([]);
   const [myGroup, setMyGroup] = useState(null);
@@ -44,7 +44,7 @@ function Dashboard() {
   const navigate = useNavigate();
 
   const api = axios.create({
-    baseURL: 'http://127.0.0.1:8000/api/',
+    baseURL: '/api/',
     headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` }
   });
 
@@ -163,11 +163,13 @@ function Dashboard() {
   if (!profile) return <div className="container mt-4">Loading...</div>;
 
   return (
-    <div className="dashboard container animate-fade-in">
-      <header className="dashboard-header">
-        <h1>Welcome, {profile.first_name || profile.username}!</h1>
-        <p className="role-badge">{profile.role}</p>
-      </header>
+    <div className={`dashboard container animate-fade-in ${hideHeader ? 'pt-0' : ''}`}>
+      {!hideHeader && (
+        <header className="dashboard-header">
+          <h1>Welcome, {profile.first_name || profile.username}!</h1>
+          <p className="role-badge">{profile.role}</p>
+        </header>
+      )}
 
       {profile.role === 'LEADER' && (
         <section className="leader-dashboard glass p-6 border-radius mt-8">
@@ -351,9 +353,18 @@ function Dashboard() {
                   {myGroup.arif_details && (
                     <div className="glass p-4 flex flex-col justify-between border-radius gap-4" style={{ borderColor: '#eab308', borderWidth: '2px' }}>
                       <div className="flex justify-between align-center">
-                        <div>
-                          <p className="font-bold">{myGroup.arif_details.first_name || myGroup.arif_details.username} {myGroup.arif_details.last_name}</p>
-                          <p className="text-muted text-sm">@{myGroup.arif_details.username}</p>
+                        <div className="flex align-center gap-3">
+                          <div style={{ width: '40px', height: '40px', borderRadius: '50%', overflow: 'hidden', backgroundColor: 'rgba(234, 179, 8, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#eab308' }}>
+                             {myGroup.arif_details.profile_picture ? (
+                                <img src={myGroup.arif_details.profile_picture.replace(/^https?:\/\/[^\/]+/, '')} alt="..." style={{width:'100%', height:'100%', objectFit:'cover'}} />
+                             ) : (
+                                <span className="font-bold text-lg">{myGroup.arif_details.first_name?.[0] || myGroup.arif_details.username[0]}</span>
+                             )}
+                          </div>
+                          <div>
+                            <p className="font-bold">{myGroup.arif_details.first_name || myGroup.arif_details.username} {myGroup.arif_details.last_name}</p>
+                            <p className="text-muted text-sm">@{myGroup.arif_details.username}</p>
+                          </div>
                         </div>
                         <div className="role-display flex align-center gap-2">
                           <RoleIcon role="ARIF" />
@@ -367,9 +378,18 @@ function Dashboard() {
                     myGroup.members.map(member => (
                       <div key={member.id} className="glass p-4 flex flex-col justify-between border-radius gap-4">
                         <div className="flex justify-between align-center">
-                          <div>
-                            <p className="font-bold">{member.user.first_name} {member.user.last_name}</p>
-                            <p className="text-muted text-sm">@{member.user.username}</p>
+                          <div className="flex align-center gap-3">
+                            <div style={{ width: '40px', height: '40px', borderRadius: '50%', overflow: 'hidden', backgroundColor: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                               {member.user.profile_picture ? (
+                                  <img src={member.user.profile_picture.replace(/^https?:\/\/[^\/]+/, '')} alt="..." style={{width:'100%', height:'100%', objectFit:'cover'}} />
+                               ) : (
+                                  <span className="font-bold text-lg">{member.user.first_name?.[0] || member.user.username[0]}</span>
+                               )}
+                            </div>
+                            <div>
+                              <p className="font-bold">{member.user.first_name} {member.user.last_name}</p>
+                              <p className="text-muted text-sm">@{member.user.username}</p>
+                            </div>
                           </div>
                           <div className="role-display flex align-center gap-2">
                             <RoleIcon role={member.group_role} />
@@ -447,9 +467,18 @@ function Dashboard() {
                   {myGroup.arif_details && (
                     <div className="glass p-4 flex flex-col justify-between border-radius gap-4" style={{ borderColor: '#eab308', borderWidth: '2px' }}>
                       <div className="flex justify-between align-center">
-                        <div>
-                          <p className="font-bold">{myGroup.arif_details.first_name || myGroup.arif_details.username} {myGroup.arif_details.last_name}</p>
-                          <p className="text-muted text-sm">@{myGroup.arif_details.username}</p>
+                        <div className="flex align-center gap-3">
+                          <div style={{ width: '40px', height: '40px', borderRadius: '50%', overflow: 'hidden', backgroundColor: 'rgba(234, 179, 8, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#eab308' }}>
+                             {myGroup.arif_details.profile_picture ? (
+                                <img src={myGroup.arif_details.profile_picture.replace(/^https?:\/\/[^\/]+/, '')} alt="..." style={{width:'100%', height:'100%', objectFit:'cover'}} />
+                             ) : (
+                                <span className="font-bold text-lg">{myGroup.arif_details.first_name?.[0] || myGroup.arif_details.username[0]}</span>
+                             )}
+                          </div>
+                          <div>
+                            <p className="font-bold">{myGroup.arif_details.first_name || myGroup.arif_details.username} {myGroup.arif_details.last_name}</p>
+                            <p className="text-muted text-sm">@{myGroup.arif_details.username}</p>
+                          </div>
                         </div>
                         <div className="role-display flex align-center gap-2">
                           <RoleIcon role="ARIF" />
@@ -462,9 +491,18 @@ function Dashboard() {
                   {myGroup.members.map(member => (
                     <div key={member.id} className="glass p-4 flex flex-col justify-between border-radius gap-4">
                       <div className="flex justify-between align-center">
-                        <div>
-                          <p className="font-bold">{member.user.first_name} {member.user.last_name}</p>
-                          <p className="text-muted text-sm">@{member.user.username}</p>
+                        <div className="flex align-center gap-3">
+                          <div style={{ width: '40px', height: '40px', borderRadius: '50%', overflow: 'hidden', backgroundColor: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                             {member.user.profile_picture ? (
+                                <img src={member.user.profile_picture.replace(/^https?:\/\/[^\/]+/, '')} alt="..." style={{width:'100%', height:'100%', objectFit:'cover'}} />
+                             ) : (
+                                <span className="font-bold text-lg">{member.user.first_name?.[0] || member.user.username[0]}</span>
+                             )}
+                          </div>
+                          <div>
+                            <p className="font-bold">{member.user.first_name} {member.user.last_name}</p>
+                            <p className="text-muted text-sm">@{member.user.username}</p>
+                          </div>
                         </div>
                         <div className="role-display flex align-center gap-2">
                           <RoleIcon role={member.group_role} />

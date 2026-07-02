@@ -25,7 +25,7 @@ function UserProfile() {
 
   const fetchProfile = async () => {
     try {
-      const res = await axios.get('http://127.0.0.1:8000/api/accounts/profile/', {
+      const res = await axios.get(`/api/accounts/profile/`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setProfile(res.data);
@@ -37,7 +37,7 @@ function UserProfile() {
         bio: res.data.bio || ''
       });
       if (res.data.profile_picture) {
-        setPreviewImage(res.data.profile_picture.startsWith('http') ? res.data.profile_picture : `http://127.0.0.1:8000${res.data.profile_picture}`);
+        setPreviewImage(res.data.profile_picture ? res.data.profile_picture.replace(/^https?:\/\/[^\/]+/, '') : '');
       }
     } catch (err) {
       console.error(err);
@@ -75,7 +75,7 @@ function UserProfile() {
     }
 
     try {
-      await axios.patch('http://127.0.0.1:8000/api/accounts/profile/', data, {
+      await axios.patch(`/api/accounts/profile/`, data, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'

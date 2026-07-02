@@ -52,16 +52,24 @@ body {
   padding-bottom: 2rem;
 }
 
-/* Squircle Image */
-.instants-image-wrapper {
+/* Squircle Image Stack */
+.instants-stack-container {
   width: 85%;
-  aspect-ratio: 1 / 1.1; /* slightly taller than square */
-  border-radius: 20% 18% 22% 19% / 19% 21% 18% 20%; /* Organic squircle look */
-  overflow: hidden;
+  aspect-ratio: 1 / 1.1;
   margin-bottom: 1.5rem;
   position: relative;
+}
+
+.instants-image-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 20% 18% 22% 19% / 19% 21% 18% 20%; /* Organic squircle look */
+  overflow: hidden;
   box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-  transition: opacity 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
 .instants-image {
@@ -300,4 +308,156 @@ body {
 
 .create-recap-btn:hover {
   background: #ddd;
+}
+
+/* My Instants Grid and Details */
+.my-instants-grid { padding-bottom: 2rem; }
+.my-instant-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.my-instant-card:hover { transform: scale(1.02); box-shadow: 0 8px 24px rgba(0,0,0,0.6); }
+.reactions-detail-box { animation: slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+/* Detail Modal Restyling */
+.detail-image-wrapper {
+  width: 100%;
+  max-width: 400px;
+  height: 45vh;
+  margin-bottom: 2rem;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  animation: scaleIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.detail-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.reactions-detail-sheet {
+  width: 100%;
+  max-width: 500px;
+  background: #1c1c1e;
+  border-radius: 32px 32px 0 0;
+  padding: 2rem 1.5rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: relative;
+  box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
+}
+
+.sheet-drag-handle {
+  width: 40px;
+  height: 5px;
+  background: #333;
+  border-radius: 10px;
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.reactions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  overflow-y: auto;
+  flex: 1;
+  padding-bottom: 2rem;
+}
+
+.reaction-user-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.8rem 1rem;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.03);
+  transition: background 0.2s;
+}
+
+.reaction-user-row:active {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.reaction-user-avatar-wrapper {
+  position: relative;
+  width: 48px;
+  height: 48px;
+}
+
+.reaction-user-avatar-wrapper img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: #333;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.reaction-emoji-badge {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  background: #222;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.8);
+  border: 2px solid #1c1c1e;
+}
+
+.reaction-user-name {
+  color: white;
+  flex: 1;
+  font-weight: 500;
+  font-size: 1.05rem;
+}
+
+.empty-reactions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  opacity: 0.5;
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@media (max-width: 400px) {
+  .instants-grid {
+    gap: 10px;
+  }
+  .reaction-btn {
+    width: 48px;
+    height: 48px;
+    font-size: 1.5rem;
+  }
+  .instants-reactions {
+    gap: 1rem;
+  }
+  .instants-grid-container {
+    padding: 1rem 0.5rem;
+  }
 }

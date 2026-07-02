@@ -17,7 +17,8 @@ class User(AbstractUser):
     phone_number = models.CharField(max_length=20, null=True, blank=True)
     profile_picture = models.ImageField(upload_to='user_profiles/', null=True, blank=True)
     bio = models.TextField(null=True, blank=True)
-
+    unlimited_instants = models.BooleanField(default=False)
+    moderated_groups = models.ManyToManyField('camp.ScoutGroup', blank=True, related_name='moderators')
     def __str__(self):
         return f"{self.username} ({self.get_role_display()})"
 

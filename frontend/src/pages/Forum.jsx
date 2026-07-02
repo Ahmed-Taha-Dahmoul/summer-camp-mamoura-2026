@@ -4,13 +4,13 @@ import { useNavigate } from 'react-router-dom';
 import { MessageSquare, Image as ImageIcon } from 'lucide-react';
 import './Forum.css';
 
-function Forum() {
+function Forum({ hideHeader = false }) {
   const [posts, setPosts] = useState([]);
   const [newPost, setNewPost] = useState('');
   const navigate = useNavigate();
 
   const api = axios.create({
-    baseURL: 'http://127.0.0.1:8000/api/',
+    baseURL: '/api/',
     headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` }
   });
 
@@ -42,11 +42,13 @@ function Forum() {
   };
 
   return (
-    <div className="forum container animate-fade-in">
-      <header className="forum-header">
-        <h1>Camp Forum</h1>
-        <p>Share your moments and talk with other groups!</p>
-      </header>
+    <div className={`forum container animate-fade-in ${hideHeader ? 'pt-0' : ''}`}>
+      {!hideHeader && (
+        <header className="forum-header">
+          <h1>Camp Forum</h1>
+          <p>Share your moments and talk with other groups!</p>
+        </header>
+      )}
 
       <section className="create-post glass border-radius p-6 mb-8">
         <form onSubmit={handlePostSubmit}>
@@ -70,7 +72,17 @@ function Forum() {
         {posts.map(post => (
           <div key={post.id} className="post-card glass border-radius p-6 mb-4">
             <div className="post-header">
-              <div className="avatar"></div>
+              <div className="avatar" style={{ overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.1)' }}>
+                {post.author_profile_picture ? (
+                  <img 
+                    src={post.author_profile_picture.replace(/^https?:\/\/[^\/]+/, '')} 
+                    alt={post.author_name} 
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                  />
+                ) : (
+                  <span style={{ fontWeight: 'bold', fontSize: '1.2rem' }}>{post.author_name.charAt(0).toUpperCase()}</span>
+                )}
+              </div>
               <div className="author-info">
                 <h4>{post.author_name}</h4>
                 <span className="timestamp">{new Date(post.created_at).toLocaleString()}</span>

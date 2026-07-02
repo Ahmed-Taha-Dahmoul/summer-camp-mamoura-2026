@@ -93,3 +93,15 @@
   font-weight: 600;
   color: var(--text-light);
 }
+
+@media (max-width: 768px) {
+  .profile-header {
+    flex-direction: column;
+    text-align: center;
+    padding: 1.5rem;
+  }
+  .badges-row {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+}

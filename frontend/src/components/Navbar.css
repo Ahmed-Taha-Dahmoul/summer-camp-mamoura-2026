@@ -142,3 +142,78 @@
 .dropdown-item.text-red:hover {
   background: rgba(239, 68, 68, 0.1);
 }
+
+/* Mobile Menu Styles */
+.mobile-menu-toggle {
+  display: none;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  z-index: 1001; /* Ensure it's above the drawer */
+}
+
+@media (max-width: 768px) {
+  .mobile-menu-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .nav-links {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: 250px;
+    height: 100vh;
+    background: var(--bg, #fff); /* Fallback if var(--bg) isn't defined here */
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 5rem 2rem 2rem 2rem;
+    gap: 1.5rem;
+    box-shadow: -5px 0 30px rgba(0, 0, 0, 0.1);
+    transition: right 0.3s ease-in-out;
+    z-index: 1000;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .nav-links {
+      background: var(--bg, #16171d);
+      box-shadow: -5px 0 30px rgba(0, 0, 0, 0.5);
+    }
+  }
+
+  .nav-links.open {
+    right: 0;
+  }
+
+  .nav-links li {
+    width: 100%;
+  }
+
+  .nav-links a:not(.btn) {
+    font-size: 1.1rem;
+    display: block;
+    padding: 0.5rem 0;
+  }
+
+  .nav-profile-container {
+    margin-top: 1rem;
+    width: 100%;
+  }
+
+  .nav-profile-trigger {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .profile-dropdown {
+    position: static;
+    box-shadow: none;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    margin-top: 0.5rem;
+    width: 100%;
+    animation: none;
+    transform: none;
+  }
+}

@@ -1,6 +1,7 @@
-import React, { useEffect, useRef } from 'react';
-import { MapPin, Calendar, Coins, Tent, Zap, Navigation, Smile, Phone, Star, ArrowDown } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { MapPin, Calendar, Coins, Tent, Zap, Navigation, Smile, Phone, Star, ArrowDown, Users, MessageSquare, Camera, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import Forum from './Forum';
 import './Home.css';
 
 const activities = [
@@ -39,21 +40,62 @@ const stats = [
 
 function Home() {
   const heroRef = useRef(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
+    const token = localStorage.getItem('access_token');
+    setIsLoggedIn(!!token);
+
     const handleScroll = () => {
       if (heroRef.current) {
         const scrollY = window.scrollY;
         heroRef.current.style.setProperty('--parallax-y', `${scrollY * 0.4}px`);
       }
     };
-    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    if (!token) {
+      window.addEventListener('scroll', handleScroll, { passive: true });
+    }
+    
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const scrollToDetails = () => {
     document.getElementById('details')?.scrollIntoView({ behavior: 'smooth' });
   };
+
+  if (isLoggedIn) {
+    return (
+      <div className="home-logged-in-feed">
+        
+        <div className="quick-actions-wrapper">
+          <div className="container">
+            <div className="quick-actions-bar">
+              <Link to="/dashboard" className="quick-action-btn qa-green">
+                <Users size={18} /> <span>Manage Patrol</span>
+              </Link>
+              <Link to="/instantane" className="quick-action-btn qa-purple">
+                <Camera size={18} /> <span>Instantané</span>
+              </Link>
+              <Link to="/profile" className="quick-action-btn qa-blue">
+                <User size={18} /> <span>Profile</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+        
+        <div className="forum-feed-container" style={{ padding: '2rem 0' }}>
+          <div className="container text-center mb-4">
+            <h1 className="premium-title" style={{ fontSize: '2.5rem' }}>
+              Camp <span className="gradient-text">Feed</span>
+            </h1>
+          </div>
+          <Forum hideHeader={true} />
+        </div>
+
+      </div>
+    );
+  }
 
   return (
     <div className="home animate-fade-in">

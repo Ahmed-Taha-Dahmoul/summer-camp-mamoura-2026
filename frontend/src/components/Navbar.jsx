@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Tent, User as UserIcon, LogOut, Settings, HelpCircle, ChevronDown } from 'lucide-react';
+import { Tent, User as UserIcon, LogOut, Settings, HelpCircle, ChevronDown, Menu, X } from 'lucide-react';
 import axios from 'axios';
 import './Navbar.css';
 
 function Navbar() {
   const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userProfile, setUserProfile] = useState(null);
   const dropdownRef = useRef(null);
 
@@ -15,7 +16,7 @@ function Navbar() {
 
   useEffect(() => {
     if (isLoggedIn) {
-      axios.get('http://127.0.0.1:8000/api/accounts/profile/', {
+      axios.get(`/api/accounts/profile/`, {
         headers: { Authorization: `Bearer ${token}` }
       }).then(res => {
         setUserProfile(res.data);
@@ -40,18 +41,30 @@ function Navbar() {
     localStorage.removeItem('refresh_token');
     navigate('/login');
   };
+
+  const closeMobileMenu = () => setMobileMenuOpen(false);
+
   return (
     <nav className="navbar glass">
       <div className="container nav-container">
-        <Link to="/" className="nav-logo">
+        <Link to="/" className="nav-logo" onClick={closeMobileMenu}>
           <Tent size={32} color="var(--primary)" />
           <span>Paths of Happiness</span>
         </Link>
-        <ul className="nav-links">
-          <li><Link to="/">Home</Link></li>
-          <li><Link to="/forum">Forum</Link></li>
-          {isLoggedIn && <li><Link to="/instantane">Instantané</Link></li>}
-          <li><Link to="/dashboard">Dashboard</Link></li>
+        
+        <button 
+          className="mobile-menu-toggle" 
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          aria-label="Toggle menu"
+        >
+          {mobileMenuOpen ? <X size={24} color="var(--text-dark)" /> : <Menu size={24} color="var(--text-dark)" />}
+        </button>
+
+        <ul className={`nav-links ${mobileMenuOpen ? 'open' : ''}`}>
+          <li><Link to="/" onClick={closeMobileMenu}>Home</Link></li>
+          <li><Link to="/forum" onClick={closeMobileMenu}>Forum</Link></li>
+          {isLoggedIn && <li><Link to="/instantane" onClick={closeMobileMenu}>Instantané</Link></li>}
+          <li><Link to="/dashboard" onClick={closeMobileMenu}>Dashboard</Link></li>
           {isLoggedIn ? (
             <li className="nav-profile-container" ref={dropdownRef}>
               <button 
@@ -60,7 +73,7 @@ function Navbar() {
               >
                 {userProfile && userProfile.profile_picture ? (
                   <img 
-                    src={userProfile.profile_picture.startsWith('http') ? userProfile.profile_picture : `http://127.0.0.1:8000${userProfile.profile_picture}`} 
+                    src={userProfile.profile_picture ? userProfile.profile_picture.replace(/^https?:\/\/[^\/]+/, '') : ''} 
                     alt="Profile" 
                     className="nav-avatar-img"
                   />
@@ -80,11 +93,11 @@ function Navbar() {
                     <p className="text-xs text-muted">@{userProfile?.username}</p>
                   </div>
                   <div className="dropdown-divider"></div>
-                  <Link to="/profile" className="dropdown-item" onClick={() => setDropdownOpen(false)}>
+                  <Link to="/profile" className="dropdown-item" onClick={() => { setDropdownOpen(false); closeMobileMenu(); }}>
                     <Settings size={16} />
                     <span>My Profile</span>
                   </Link>
-                  <Link to="/help" className="dropdown-item" onClick={() => setDropdownOpen(false)}>
+                  <Link to="/help" className="dropdown-item" onClick={() => { setDropdownOpen(false); closeMobileMenu(); }}>
                     <HelpCircle size={16} />
                     <span>Help & Support</span>
                   </Link>
@@ -97,7 +110,7 @@ function Navbar() {
               )}
             </li>
           ) : (
-            <li><Link to="/login" className="btn btn-primary">Login</Link></li>
+            <li><Link to="/login" className="btn btn-primary" onClick={closeMobileMenu}>Login</Link></li>
           )}
         </ul>
       </div>
