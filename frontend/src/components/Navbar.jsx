@@ -50,6 +50,7 @@ function Navbar() {
         <ul className="nav-links">
           <li><Link to="/">Home</Link></li>
           <li><Link to="/forum">Forum</Link></li>
+          {isLoggedIn && <li><Link to="/instantane">Instantané</Link></li>}
           <li><Link to="/dashboard">Dashboard</Link></li>
           {isLoggedIn ? (
             <li className="nav-profile-container" ref={dropdownRef}>
@@ -68,7 +69,7 @@ function Navbar() {
                     <UserIcon size={20} />
                   </div>
                 )}
-                <span className="nav-username">{userProfile?.first_name || userProfile?.username || 'Profile'}</span>
+                <span className="nav-username">{userProfile?.username}</span>
                 <ChevronDown size={16} className={`dropdown-arrow ${dropdownOpen ? 'open' : ''}`} />
               </button>
 

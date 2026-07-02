@@ -30,7 +30,8 @@
 /* Animated floating particles */
 .hero-particles {
   position: absolute;
-  inset: 0;
+  inset: -20%;
+  min-height: 100svh;
   pointer-events: none;
   z-index: 0;
 }
@@ -59,11 +60,13 @@
 /* Mesh overlay */
 .hero-bg-overlay {
   position: absolute;
-  inset: 0;
+  inset: -20%;
+  min-height: 100svh;
   background-image:
     radial-gradient(circle at 1px 1px, rgba(255,255,255,0.04) 1px, transparent 0);
   background-size: 40px 40px;
   z-index: 0;
+  transform: translateY(var(--parallax-y, 0px));
 }
 
 .hero-content {
@@ -71,6 +74,7 @@
   z-index: 2;
   max-width: 720px;
   padding: 2rem 1.5rem;
+  margin-top: -4rem;
   display: flex;
   flex-direction: column;
   align-items: center;

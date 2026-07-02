@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import GroupProfile from './pages/GroupProfile';
 import Forum from './pages/Forum';
 import UserProfile from './pages/UserProfile';
+import Instantane from './pages/Instantane';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -35,6 +36,11 @@ function App() {
           <Route path="/profile" element={
             <ProtectedRoute>
               <UserProfile />
+            </ProtectedRoute>
+          } />
+          <Route path="/instantane" element={
+            <ProtectedRoute>
+              <Instantane />
             </ProtectedRoute>
           } />
         </Routes>

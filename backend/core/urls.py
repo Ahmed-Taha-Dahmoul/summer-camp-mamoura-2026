@@ -24,6 +24,7 @@ urlpatterns = [
     path('api/accounts/', include('accounts.urls')),
     path('api/camp/', include('camp.urls')),
     path('api/forum/', include('forum.urls')),
+    path('api/instantane/', include('instantane.urls')),
 ]
 
 if settings.DEBUG:
