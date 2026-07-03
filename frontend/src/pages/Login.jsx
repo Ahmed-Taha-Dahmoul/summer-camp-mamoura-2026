@@ -75,7 +75,7 @@ function Login() {
   return (
     <div className="login-container container animate-fade-in">
       <div className="login-card glass">
-        <div className="login-tabs" style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem' }}>
+        <div className="login-tabs">
           <button 
             className={`tab ${isLogin === 'login' ? 'active' : ''}`} 
             onClick={() => setIsLogin('login')}

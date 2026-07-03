@@ -9,6 +9,7 @@ import Forum from './pages/Forum';
 import UserProfile from './pages/UserProfile';
 import Instantane from './pages/Instantane';
 import Games from './pages/Games';
+import Wheel from './pages/Wheel';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -43,6 +44,11 @@ function App() {
           <Route path="/games" element={
             <ProtectedRoute>
               <Games />
+            </ProtectedRoute>
+          } />
+          <Route path="/wheel" element={
+            <ProtectedRoute>
+              <Wheel />
             </ProtectedRoute>
           } />
         </Routes>

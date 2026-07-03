@@ -78,3 +78,12 @@ class GameScore(models.Model):
 
     def __str__(self):
         return f"{self.group.name} - {self.game.name}: {self.points}"
+
+class WheelSpin(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='wheel_spins')
+    group = models.ForeignKey(ScoutGroup, on_delete=models.SET_NULL, null=True, blank=True)
+    points_won = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} won {self.points_won} pts at {self.created_at}"

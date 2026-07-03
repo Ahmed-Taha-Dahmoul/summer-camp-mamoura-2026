@@ -64,6 +64,7 @@ function Navbar() {
           <li><Link to="/" onClick={closeMobileMenu}>Home</Link></li>
 
           {isLoggedIn && <li><Link to="/instantane" onClick={closeMobileMenu}>Instantané</Link></li>}
+          {isLoggedIn && <li><Link to="/wheel" onClick={closeMobileMenu}>Wheel Spin</Link></li>}
           <li><Link to="/dashboard" onClick={closeMobileMenu}>Dashboard</Link></li>
           {isLoggedIn ? (
             <li className="nav-profile-container" ref={dropdownRef}>

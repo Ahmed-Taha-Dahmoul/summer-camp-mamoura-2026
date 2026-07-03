@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Camera, AlertCircle, RefreshCw, X, Plus, SwitchCamera } from 'lucide-react';
+import { Camera, AlertCircle, RefreshCw, X, Plus, SwitchCamera, Grid, ZapOff, Zap, Users } from 'lucide-react';
 import './Instantane.css';
 
 const EMOJIS = ['❤️', '🔥', '😂', '😮'];
@@ -19,9 +19,11 @@ function Instantane() {
   const [error, setError] = useState('');
   const [stream, setStream] = useState(null);
   const [facingMode, setFacingMode] = useState('environment');
+  const [flashOn, setFlashOn] = useState(false);
+  const [flashEffect, setFlashEffect] = useState(false);
   
   // View states: 'camera', 'viewer', 'my_instants'
-  const [viewMode, setViewMode] = useState('viewer');
+  const [viewMode, setViewMode] = useState('camera');
   
   // My Instants state
   const [myInstantsList, setMyInstantsList] = useState([]);
@@ -34,7 +36,6 @@ function Instantane() {
 
   // Story state
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [showAllCaughtUp, setShowAllCaughtUp] = useState(false);
   
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -76,6 +77,27 @@ function Instantane() {
     startCamera(newMode);
   };
 
+  const toggleFlash = async () => {
+    const newFlashState = !flashOn;
+    setFlashOn(newFlashState);
+    
+    if (stream) {
+      const videoTrack = stream.getVideoTracks()[0];
+      if (videoTrack) {
+        const capabilities = videoTrack.getCapabilities();
+        if (capabilities.torch) {
+          try {
+            await videoTrack.applyConstraints({
+              advanced: [{ torch: newFlashState }]
+            });
+          } catch (err) {
+            console.error("Error applying torch constraint:", err);
+          }
+        }
+      }
+    }
+  };
+
   const fetchInstantanes = async () => {
     try {
       const res = await axios.get(`${API_URL}/api/instantane/`, {
@@ -87,6 +109,15 @@ function Instantane() {
       setHasModerationAccess(res.data.has_moderation_access || false);
       setPosts(res.data.posts);
       setMyPost(res.data.my_post);
+      
+      if (!res.data.has_posted_today || res.data.posts.length === 0) {
+        setViewMode('camera');
+        startCamera();
+      } else {
+        setViewMode('viewer');
+        stopCamera();
+      }
+      
       setLoading(false);
     } catch (err) {
       console.error("Error fetching instantanes:", err);
@@ -147,7 +178,17 @@ function Instantane() {
   }, [viewMode, stream, preview]);
 
   const handleCapture = () => {
-    if (videoRef.current && canvasRef.current) {
+    if (!hasUnlimited && postsTodayCount >= 4) {
+      alert("You cannot take more than 4 Instants per day!");
+      return;
+    }
+    
+    if (flashOn) {
+      setFlashEffect(true);
+    }
+    
+    setTimeout(() => {
+      if (videoRef.current && canvasRef.current) {
       const video = videoRef.current;
       const canvas = canvasRef.current;
       
@@ -162,13 +203,17 @@ function Instantane() {
       
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       
-      canvas.toBlob((blob) => {
-        const capturedFile = new File([blob], 'instantane.jpg', { type: 'image/jpeg' });
-        setFile(capturedFile);
-        setPreview(URL.createObjectURL(capturedFile));
-        stopCamera();
-      }, 'image/jpeg', 0.92);
-    }
+        canvas.toBlob((blob) => {
+          const capturedFile = new File([blob], 'instantane.jpg', { type: 'image/jpeg' });
+          setFile(capturedFile);
+          setPreview(URL.createObjectURL(capturedFile));
+          stopCamera();
+          if (flashOn) {
+            setFlashEffect(false);
+          }
+        }, 'image/jpeg', 0.92);
+      }
+    }, flashOn ? 150 : 0);
   };
 
   const handleRetake = () => {
@@ -198,7 +243,6 @@ function Instantane() {
       setPreview(null);
       setFile(null);
       setCurrentIndex(0); // Reset to first story
-      setShowAllCaughtUp(false);
     } catch (err) {
       console.error("Upload error:", err);
       setError(err.response?.data?.detail || 'Failed to upload photo.');
@@ -215,7 +259,7 @@ function Instantane() {
     if (selectedInstant) {
       setSelectedInstant(null);
     } else if (viewMode === 'my_instants' || viewMode === 'moderation') {
-      setViewMode('viewer');
+      setViewMode('camera');
     } else {
       navigate('/');
     }
@@ -234,7 +278,9 @@ function Instantane() {
       if (currentIndex < posts.length - 1) {
         setCurrentIndex(currentIndex + 1);
       } else {
-        setShowAllCaughtUp(true);
+        setViewMode('camera');
+        startCamera();
+        setCurrentIndex(0);
       }
     }
   };
@@ -269,113 +315,103 @@ function Instantane() {
   // --- CAMERA VIEW (UPLOAD) ---
   if (viewMode === 'camera') {
     return (
-      <div className="story-viewer-overlay">
-        <div className="instants-container" style={{ justifyContent: 'center' }}>
+      <div className="camera-view-container">
+        
+        {/* Top Header */}
+        <div className="camera-header">
+          <button onClick={() => { stopCamera(); navigate('/'); }} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', padding: '0.5rem' }}>
+            <X size={28} />
+          </button>
+          <h2 className="camera-title">Nouvel instantané</h2>
           
-          <div style={{ display: 'flex', width: '100%', padding: '0 1rem', position: 'absolute', top: '5vh', justifyContent: 'space-between', zIndex: 100 }}>
-            <button onClick={() => { stopCamera(); setViewMode('viewer'); }} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}>
-              <X size={28} />
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', height: '44px' }}>
+            <button onClick={() => { stopCamera(); openMyInstants(); }} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', padding: '0.5rem' }}>
+              <Grid size={28} />
             </button>
-            {!preview && (
-              <button onClick={toggleCamera} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}>
-                <SwitchCamera size={28} />
+            {hasModerationAccess && (
+              <button 
+                className="moderation-btn"
+                style={{ position: 'absolute', top: '100%', marginTop: '0.5rem', background: 'rgba(239, 68, 68, 0.85)', border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer', width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', boxShadow: '0 4px 12px rgba(0,0,0,0.5)', zIndex: 110 }}
+                onClick={() => { stopCamera(); openModeration(); }}
+                title="Moderation Dashboard"
+              >
+                <AlertCircle size={20} />
               </button>
             )}
           </div>
+        </div>
 
-          <h1 style={{ color: 'white', marginBottom: '1rem', fontSize: '1.5rem', fontWeight: 600 }}>Create Instant</h1>
+        {error && (
+          <div className="alert-error" style={{ margin: '0 1rem', padding: '1rem', color: '#ef4444', background: '#1c1c1e', borderRadius: '12px', textAlign: 'center' }}>
+            {error}
+          </div>
+        )}
 
-          {error && (
-            <div className="alert-error glass mb-4" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', padding: '1rem', color: '#ef4444', borderRadius: '16px', background: '#1c1c1e', border: 'none' }}>
-              <AlertCircle size={20} />
-              <span>{error}</span>
-            </div>
-          )}
+        {/* Camera Viewport */}
+        <div className="camera-viewport-wrapper">
+          <div className="camera-viewport">
+            {flashEffect && (
+              <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'white', zIndex: 50 }}></div>
+            )}
+            {preview ? (
+              <img src={preview} alt="Preview" />
+            ) : (
+              <video 
+                ref={videoRef} 
+                autoPlay 
+                playsInline 
+                muted 
+                style={{ transform: facingMode === 'user' ? 'scaleX(-1)' : 'none' }} 
+              />
+            )}
+            <canvas ref={canvasRef} style={{ display: 'none' }} />
+          </div>
+        </div>
 
-          <div className="instants-content-layer">
-            <div className="instants-stack-container" style={{ margin: '0 auto 2rem auto', display: 'flex', justifyContent: 'center' }}>
-              <div className="instants-image-wrapper" style={{ position: 'absolute' }}>
-                {preview ? (
-                  <img src={preview} alt="Preview" className="instants-image" />
-                ) : (
-                  <video 
-                    ref={videoRef} 
-                    autoPlay 
-                    playsInline 
-                    muted 
-                    className="instants-image"
-                    style={{ transform: facingMode === 'user' ? 'scaleX(-1)' : 'none', objectFit: 'cover', width: '100%', height: '100%' }} 
-                  />
-                )}
-                <canvas ref={canvasRef} style={{ display: 'none' }} />
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', gap: '1.5rem', width: '85%', justifyContent: 'center' }}>
-              {!preview ? (
+        {/* Bottom Controls */}
+        <div className="camera-controls">
+          <div className="camera-buttons-row">
+            {!preview ? (
+              <>
+                <button className="secondary-cam-btn" onClick={toggleFlash}>
+                  {flashOn ? <Zap size={24} color="#fbbf24" fill="#fbbf24" /> : <ZapOff size={24} />}
+                </button>
+                
+                <button className="capture-btn-outer" onClick={handleCapture}>
+                  <div className="capture-btn-inner"></div>
+                </button>
+                
+                <button className="secondary-cam-btn" onClick={toggleCamera}>
+                  <RefreshCw size={24} />
+                </button>
+              </>
+            ) : (
+              <>
+                <button className="secondary-cam-btn" onClick={handleRetake} disabled={uploading}>
+                  <X size={24} />
+                </button>
+                
                 <button 
                   style={{ 
                     background: '#fff', 
                     color: '#000', 
                     border: 'none', 
                     borderRadius: '50px', 
-                    padding: '1rem 2rem', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '0.5rem', 
+                    padding: '1rem 2.5rem', 
                     fontSize: '1rem', 
                     fontWeight: 600, 
                     cursor: 'pointer' 
                   }}
-                  onClick={handleCapture}
+                  onClick={handleUpload}
+                  disabled={uploading}
                 >
-                  <Camera size={24} />
-                  <span>Capture</span>
+                  {uploading ? 'Posting...' : 'Share'}
                 </button>
-              ) : (
-                <>
-                  <button 
-                    style={{ 
-                      background: '#1c1c1e', 
-                      color: '#fff', 
-                      border: 'none', 
-                      borderRadius: '50px', 
-                      padding: '1rem 1.5rem', 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: '0.5rem', 
-                      fontSize: '1rem', 
-                      fontWeight: 600, 
-                      cursor: 'pointer' 
-                    }}
-                    onClick={handleRetake}
-                    disabled={uploading}
-                  >
-                    <RefreshCw size={20} />
-                    Retake
-                  </button>
-                  <button 
-                    style={{ 
-                      background: '#fff', 
-                      color: '#000', 
-                      border: 'none', 
-                      borderRadius: '50px', 
-                      padding: '1rem 1.5rem', 
-                      fontSize: '1rem', 
-                      fontWeight: 600, 
-                      cursor: 'pointer',
-                      flex: 1
-                    }}
-                    onClick={handleUpload}
-                    disabled={uploading}
-                  >
-                    {uploading ? 'Posting...' : 'Share'}
-                  </button>
-                </>
-              )}
-            </div>
+              </>
+            )}
           </div>
         </div>
+
       </div>
     );
   }
@@ -521,175 +557,84 @@ function Instantane() {
 
   // --- STORY VIEWER (FEED) ---
   return (
-    <div className="story-viewer-overlay">
-      <div className="instants-container">
+    <div className="camera-view-container">
+      
+      {/* Top Header */}
+      <div className="camera-header">
+        <button onClick={() => { navigate('/'); }} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', padding: '0.5rem' }}>
+          <X size={28} />
+        </button>
+        <h2 className="camera-title">Instantanés</h2>
         
-        <div style={{ position: 'absolute', top: '1.5rem', left: 0, right: 0, padding: '0 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', zIndex: 1000, pointerEvents: 'none' }}>
-          
-          <div style={{ pointerEvents: 'auto' }}>
-            {hasPosted && (hasUnlimited || postsTodayCount < 4) && (
-              <button 
-                className="create-extra-btn"
-                style={{ background: 'rgba(28, 28, 30, 0.85)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', width: '42px', height: '42px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', boxShadow: '0 4px 12px rgba(0,0,0,0.5)', transform: 'translateZ(0)' }}
-                onClick={openCamera}
-              >
-                <Camera size={20} />
-              </button>
-            )}
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', pointerEvents: 'auto' }}>
-            {myPost && (
-              <button 
-                className="my-instant-btn"
-                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-                onClick={openMyInstants}
-              >
-                <img 
-                  src={myPost.image ? myPost.image.replace(/^https?:\/\/[^\/]+/, '') : ''} 
-                  style={{ width: '44px', height: '44px', borderRadius: '50%', objectFit: 'cover', border: '2px solid white', boxShadow: '0 2px 8px rgba(0,0,0,0.5)' }} 
-                  alt="My Instants"
-                />
-              </button>
-            )}
-
-            {hasModerationAccess && (
-              <button 
-                className="moderation-btn"
-                style={{ background: 'rgba(239, 68, 68, 0.85)', border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer', width: '44px', height: '44px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', boxShadow: '0 4px 12px rgba(0,0,0,0.5)', transform: 'translateZ(0)' }}
-                onClick={openModeration}
-                title="Moderation Dashboard"
-              >
-                <AlertCircle size={22} />
-              </button>
-            )}
-          </div>
-
-        </div>
-
-        {posts.length === 0 ? (
-          <div className="caught-up-screen">
-            {hasPosted ? (
-              <>
-                <h2>You're all caught up!</h2>
-                <p>You have viewed all Instants for today.</p>
-                <button className="btn btn-primary" onClick={closeViewer}>
-                  Go Home
-                </button>
-              </>
-            ) : (
-              <>
-                <h2>No Instants yet today.</h2>
-                <p>Be the first to share your moment!</p>
-                <button className="create-recap-btn" onClick={openCamera} style={{ marginTop: '1rem' }}>
-                  <Plus size={20} />
-                  Create instant
-                </button>
-              </>
-            )}
-          </div>
-        ) : showAllCaughtUp ? (
-          <div className="caught-up-screen">
-            <h2>You're all caught up!</h2>
-            <p>You have viewed all Instants for today.</p>
-            <button className="btn btn-primary" onClick={closeViewer}>
-              Go Home
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', height: '44px' }}>
+          <button onClick={() => { openMyInstants(); }} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', padding: '0.5rem' }}>
+            <Grid size={28} />
+          </button>
+          {hasModerationAccess && (
+            <button 
+              className="moderation-btn"
+              style={{ position: 'absolute', top: '100%', marginTop: '0.5rem', background: 'rgba(239, 68, 68, 0.85)', border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer', width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', boxShadow: '0 4px 12px rgba(0,0,0,0.5)', zIndex: 110 }}
+              onClick={() => { openModeration(); }}
+              title="Moderation Dashboard"
+            >
+              <AlertCircle size={20} />
             </button>
-          </div>
-        ) : (
-          <>
-            <div className="instants-content-layer">
-              <div 
-                className="instants-stack-container" 
-                onClick={handleNextStory} 
-                style={{ cursor: hasPosted ? 'pointer' : 'default' }}
-              >
-                {posts.slice(currentIndex, currentIndex + 3).reverse().map((post, offsetReverse) => {
-                  const actualOffset = posts.slice(currentIndex, currentIndex + 3).length - 1 - offsetReverse;
-                  
-                  return (
-                    <div 
-                      key={post.id}
-                      className="instants-image-wrapper"
-                      style={{ 
-                        zIndex: 10 - actualOffset,
-                        transform: `translateY(-${actualOffset * 25}px) scale(${1 - actualOffset * 0.05}) rotate(${actualOffset % 2 === 0 ? '-' : ''}${actualOffset * 2}deg)`,
-                        opacity: 1 - actualOffset * 0.1,
-                        filter: !hasPosted ? 'blur(15px) brightness(0.6)' : (actualOffset > 0 ? 'brightness(0.5)' : 'none'),
-                      }}
-                    >
-                      <img 
-                        src={post.image ? post.image.replace(/^https?:\/\/[^\/]+/, '') : ''} 
-                        alt="Story" 
-                        className="instants-image"
-                        style={{ transform: !hasPosted ? 'scale(1.2)' : 'none' }} // prevent blur bleeding
-                      />
-                      {!hasPosted && actualOffset === 0 && (
-                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 20 }}>
-                           <span style={{ fontSize: '3rem', textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>🔒</span>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-
-              <div className="instants-user-info" style={{ filter: !hasPosted ? 'blur(4px)' : 'none' }}>
-                {posts[currentIndex].user.profile_picture ? (
-                  <img 
-                    src={posts[currentIndex].user.profile_picture ? posts[currentIndex].user.profile_picture.replace(/^https?:\/\/[^\/]+/, '') : ''} 
-                    alt="User" 
-                    className="instants-avatar" 
-                  />
-                ) : (
-                  <div className="instants-avatar-placeholder">
-                    {posts[currentIndex].user.username.charAt(0).toUpperCase()}
-                  </div>
-                )}
-                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                  <span className="instants-username">{posts[currentIndex].user.first_name || posts[currentIndex].user.username}</span>
-                  <span className="instants-time">
-                    {new Date(posts[currentIndex].created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                  </span>
-                </div>
-                <button onClick={closeViewer} style={{ marginLeft: '1rem', background: 'none', border: 'none', color: '#888', cursor: 'pointer', zIndex: 50 }}>
-                  <X size={20} />
-                </button>
-              </div>
-
-              {!hasPosted ? (
-                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', marginTop: 'auto', marginBottom: '2rem', zIndex: 20 }}>
-                    <p style={{ color: 'white', fontWeight: 500 }}>Unlock {posts.length} Instants</p>
-                    <button className="create-recap-btn" onClick={openCamera}>
-                      <Plus size={20} />
-                      Create instant
-                    </button>
-                 </div>
-              ) : (
-                <>
-                  <div className="instants-reactions">
-                    {EMOJIS.map(emoji => {
-                      const isActive = posts[currentIndex].my_reaction === emoji;
-                      return (
-                        <button 
-                          key={emoji}
-                          className={`reaction-btn ${isActive ? 'active' : ''}`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleReaction(posts[currentIndex].id, emoji);
-                          }}
-                        >
-                          {emoji}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </>
-              )}
-            </div>
-          </>
-        )}
+          )}
+        </div>
       </div>
+
+      {/* Viewer Viewport */}
+      <div className="camera-viewport-wrapper" onClick={handleNextStory} style={{ cursor: 'pointer' }}>
+        <div className="camera-viewport">
+          <img 
+            src={posts[currentIndex]?.image ? posts[currentIndex].image.replace(/^https?:\/\/[^\/]+/, '') : ''} 
+            alt="Story" 
+          />
+          
+          {/* Overlay User Info */}
+          {posts[currentIndex] && (
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, padding: '1.5rem', background: 'linear-gradient(rgba(0,0,0,0.7), transparent)', display: 'flex', alignItems: 'center', gap: '0.75rem', zIndex: 10 }}>
+              {posts[currentIndex].user.profile_picture ? (
+                <img src={posts[currentIndex].user.profile_picture.replace(/^https?:\/\/[^\/]+/, '')} style={{ width: '44px', height: '44px', borderRadius: '50%', objectFit: 'cover', border: '2px solid white' }} alt="" />
+              ) : (
+                <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: '#333', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
+                  {posts[currentIndex].user.username.charAt(0).toUpperCase()}
+                </div>
+              )}
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontWeight: 600, fontSize: '1.1rem', color: 'white', textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
+                  {posts[currentIndex].user.first_name || posts[currentIndex].user.username}
+                </span>
+                <span style={{ fontSize: '0.85rem', color: '#ddd', textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>
+                  {new Date(posts[currentIndex].created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Reactions Controls */}
+      <div className="camera-controls">
+        <div className="instants-reactions" style={{ display: 'flex', justifyContent: 'center', gap: '1.5rem', width: '100%', padding: '0 2rem' }}>
+          {EMOJIS.map(emoji => {
+            const isActive = posts[currentIndex]?.my_reaction === emoji;
+            return (
+              <button 
+                key={emoji}
+                className={`reaction-btn ${isActive ? 'active' : ''}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if(posts[currentIndex]) handleReaction(posts[currentIndex].id, emoji);
+                }}
+              >
+                {emoji}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
     </div>
   );
 }

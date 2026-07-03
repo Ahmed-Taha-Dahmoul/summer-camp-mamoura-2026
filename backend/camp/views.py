@@ -5,6 +5,9 @@ from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from .models import ScoutGroup, ScoutProfile, InviteCode, Game, GameScore
 from .serializers import ScoutGroupSerializer, ScoutProfileSerializer, InviteCodeSerializer
+from instantane.models import InstantanePost, InstantaneReaction
+from django.utils import timezone
+from datetime import timedelta
 from rest_framework.exceptions import PermissionDenied
 
 class IsArifOrReadOnly(permissions.BasePermission):
@@ -114,6 +117,38 @@ class LeaderboardView(APIView):
         games = Game.objects.all()
         groups = ScoutGroup.objects.all()
         
+        # --- Live Instantane Calculation ---
+        instantane_games = [g for g in games if g.is_daily_instantane and g.instantane_start_date]
+        today = timezone.now().date()
+        
+        for igame in instantane_games:
+            # Reset scores for this dynamic game
+            GameScore.objects.filter(game=igame).update(points=0)
+            
+            start_date = igame.instantane_start_date
+            num_days = (today - start_date).days
+            
+            if num_days >= 0:
+                for i in range(num_days + 1):
+                    current_date = start_date + timedelta(days=i)
+                    
+                    group_reactions = {}
+                    for group in groups:
+                        users = [group.leader] + [p.user for p in group.members.select_related('user')]
+                        posts = InstantanePost.objects.filter(user__in=users, created_at__date=current_date)
+                        reactions = InstantaneReaction.objects.filter(post__in=posts).count()
+                        group_reactions[group] = reactions
+                    
+                    if group_reactions:
+                        max_reactions = max(group_reactions.values())
+                        if max_reactions > 0:
+                            winners = [g for g, r in group_reactions.items() if r == max_reactions]
+                            for winner in winners:
+                                score, _ = GameScore.objects.get_or_create(group=winner, game=igame)
+                                score.points += 1
+                                score.save()
+        # --- End Live Calculation ---
+        
         leaderboard = []
         for group in groups:
             group_scores = {}
@@ -140,3 +175,65 @@ class LeaderboardView(APIView):
             'games': games_data,
             'leaderboard': leaderboard
         })
+
+import random
+from datetime import timedelta
+from .models import WheelSpin
+
+class WheelStatusView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request):
+        last_spin = WheelSpin.objects.filter(user=request.user).order_by('-created_at').first()
+        if not last_spin:
+            return Response({"can_spin": True, "time_remaining_ms": 0})
+            
+        time_since_spin = timezone.now() - last_spin.created_at
+        if time_since_spin > timedelta(hours=5):
+            return Response({"can_spin": True, "time_remaining_ms": 0})
+            
+        remaining = timedelta(hours=5) - time_since_spin
+        return Response({"can_spin": False, "time_remaining_ms": int(remaining.total_seconds() * 1000)})
+
+class SpinWheelView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def post(self, request):
+        # 1. Check time limit
+        last_spin = WheelSpin.objects.filter(user=request.user).order_by('-created_at').first()
+        if last_spin:
+            time_since_spin = timezone.now() - last_spin.created_at
+            if time_since_spin <= timedelta(hours=5):
+                return Response({"detail": "You must wait 5 hours between spins."}, status=400)
+                
+        # 2. Find user group
+        group = None
+        if hasattr(request.user, 'profile') and request.user.profile.scout_group:
+            group = request.user.profile.scout_group
+        elif hasattr(request.user, 'led_group'):
+            group = request.user.led_group
+            
+        if not group:
+            return Response({"detail": "You must be in a patrol to spin the wheel."}, status=400)
+            
+        # 3. Calculate odds
+        # 3% for 1 pt, 0.1% for 3 pts, 96.9% for 0 pts
+        r = random.random()
+        if r < 0.001:
+            points = 3
+        elif r < 0.031:
+            points = 1
+        else:
+            points = 0
+            
+        # 4. Record spin
+        WheelSpin.objects.create(user=request.user, group=group, points_won=points)
+        
+        # 5. Add to GameScore
+        if points > 0:
+            game, _ = Game.objects.get_or_create(name="Wheel Spinner")
+            score, _ = GameScore.objects.get_or_create(group=group, game=game)
+            score.points += points
+            score.save()
+            
+        return Response({"points": points})
