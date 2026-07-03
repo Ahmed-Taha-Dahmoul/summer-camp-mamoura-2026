@@ -62,7 +62,7 @@ function Navbar() {
 
         <ul className={`nav-links ${mobileMenuOpen ? 'open' : ''}`}>
           <li><Link to="/" onClick={closeMobileMenu}>Home</Link></li>
-          <li><Link to="/forum" onClick={closeMobileMenu}>Forum</Link></li>
+
           {isLoggedIn && <li><Link to="/instantane" onClick={closeMobileMenu}>Instantané</Link></li>}
           <li><Link to="/dashboard" onClick={closeMobileMenu}>Dashboard</Link></li>
           {isLoggedIn ? (

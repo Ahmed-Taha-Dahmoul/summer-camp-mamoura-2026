@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { MapPin, Calendar, Coins, Tent, Zap, Navigation, Smile, Phone, Star, ArrowDown, Users, MessageSquare, Camera, User } from 'lucide-react';
+import { MapPin, Calendar, Coins, Tent, Zap, Navigation, Smile, Phone, Star, ArrowDown, Users, MessageSquare, Camera, User, Trophy } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Forum from './Forum';
 import './Home.css';
@@ -76,6 +76,9 @@ function Home() {
               </Link>
               <Link to="/instantane" className="quick-action-btn qa-purple">
                 <Camera size={18} /> <span>Instantané</span>
+              </Link>
+              <Link to="/games" className="quick-action-btn qa-amber">
+                <Trophy size={18} /> <span>Games</span>
               </Link>
               <Link to="/profile" className="quick-action-btn qa-blue">
                 <User size={18} /> <span>Profile</span>

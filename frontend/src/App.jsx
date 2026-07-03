@@ -8,6 +8,7 @@ import GroupProfile from './pages/GroupProfile';
 import Forum from './pages/Forum';
 import UserProfile from './pages/UserProfile';
 import Instantane from './pages/Instantane';
+import Games from './pages/Games';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -28,11 +29,7 @@ function App() {
               <GroupProfile />
             </ProtectedRoute>
           } />
-          <Route path="/forum" element={
-            <ProtectedRoute>
-              <Forum />
-            </ProtectedRoute>
-          } />
+
           <Route path="/profile" element={
             <ProtectedRoute>
               <UserProfile />
@@ -41,6 +38,11 @@ function App() {
           <Route path="/instantane" element={
             <ProtectedRoute>
               <Instantane />
+            </ProtectedRoute>
+          } />
+          <Route path="/games" element={
+            <ProtectedRoute>
+              <Games />
             </ProtectedRoute>
           } />
         </Routes>

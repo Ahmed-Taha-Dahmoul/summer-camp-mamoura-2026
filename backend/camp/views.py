@@ -1,8 +1,9 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
-from .models import ScoutGroup, ScoutProfile, InviteCode
+from .models import ScoutGroup, ScoutProfile, InviteCode, Game, GameScore
 from .serializers import ScoutGroupSerializer, ScoutProfileSerializer, InviteCodeSerializer
 from rest_framework.exceptions import PermissionDenied
 
@@ -101,7 +102,41 @@ class InviteCodeViewSet(viewsets.ModelViewSet):
             if code_count >= 8:
                 raise PermissionDenied("You can only generate a maximum of 8 scout invite codes for your patrol.")
                 
+                
             serializer.save(group=group)
         except ScoutGroup.DoesNotExist:
             raise PermissionDenied("You must create a group before generating invite codes.")
 
+class LeaderboardView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        games = Game.objects.all()
+        groups = ScoutGroup.objects.all()
+        
+        leaderboard = []
+        for group in groups:
+            group_scores = {}
+            total = 0
+            for score in group.scores.all():
+                group_scores[score.game_id] = score.points
+                total += score.points
+            
+            leaderboard.append({
+                'group_id': group.id,
+                'group_name': group.name,
+                'group_banner': request.build_absolute_uri(group.banner.url) if group.banner else None,
+                'group_profile': request.build_absolute_uri(group.profile_picture.url) if group.profile_picture else None,
+                'scores': group_scores,
+                'total_score': total,
+            })
+            
+        # Sort descending by total score
+        leaderboard.sort(key=lambda x: x['total_score'], reverse=True)
+        
+        games_data = [{'id': g.id, 'name': g.name} for g in games]
+        
+        return Response({
+            'games': games_data,
+            'leaderboard': leaderboard
+        })

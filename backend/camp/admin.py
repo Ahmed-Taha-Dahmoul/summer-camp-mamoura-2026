@@ -1,3 +1,20 @@
 from django.contrib import admin
+from .models import ScoutGroup, ScoutProfile, InviteCode, Game, GameScore
 
-# Register your models here.
+class GameScoreInline(admin.TabularInline):
+    model = GameScore
+    extra = 1
+
+class ScoutGroupAdmin(admin.ModelAdmin):
+    list_display = ('name', 'leader', 'created_at')
+    inlines = [GameScoreInline]
+
+class GameAdmin(admin.ModelAdmin):
+    list_display = ('name', 'order', 'is_daily_instantane', 'instantane_start_date')
+    list_editable = ('order', 'is_daily_instantane')
+
+admin.site.register(ScoutGroup, ScoutGroupAdmin)
+admin.site.register(ScoutProfile)
+admin.site.register(InviteCode)
+admin.site.register(Game, GameAdmin)
+admin.site.register(GameScore)

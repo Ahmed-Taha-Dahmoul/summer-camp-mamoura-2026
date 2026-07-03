@@ -1,12 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { MessageSquare, Image as ImageIcon } from 'lucide-react';
+import { MessageSquare, Image as ImageIcon, Send, X } from 'lucide-react';
 import './Forum.css';
 
 function Forum({ hideHeader = false }) {
   const [posts, setPosts] = useState([]);
   const [newPost, setNewPost] = useState('');
+  const [postImage, setPostImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  
+  const [showComments, setShowComments] = useState({});
+  const [commentInputs, setCommentInputs] = useState({});
+  
+  const fileInputRef = useRef(null);
   const navigate = useNavigate();
 
   const api = axios.create({
@@ -29,15 +36,67 @@ function Forum({ hideHeader = false }) {
     }
   };
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setPostImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeImage = () => {
+    setPostImage(null);
+    setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   const handlePostSubmit = async (e) => {
     e.preventDefault();
-    if (!newPost.trim()) return;
+    if (!newPost.trim() && !postImage) return;
+
+    const formData = new FormData();
+    formData.append('content', newPost);
+    if (postImage) formData.append('image', postImage);
+
     try {
-      await api.post('forum/posts/', { content: newPost });
+      await api.post('forum/posts/', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
       setNewPost('');
+      removeImage();
       fetchPosts();
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const toggleComments = (postId) => {
+    setShowComments(prev => ({ ...prev, [postId]: !prev[postId] }));
+  };
+
+  const handleCommentSubmit = async (postId) => {
+    const content = commentInputs[postId];
+    if (!content || !content.trim()) return;
+
+    try {
+      await api.post('forum/comments/', { post: postId, content: content.trim() });
+      setCommentInputs(prev => ({ ...prev, [postId]: '' }));
+      fetchPosts(); // refresh to show new comment
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const getLocalUrl = (url) => {
+    if (!url) return '';
+    try {
+      return new URL(url).pathname;
+    } catch {
+      return url.replace(/^https?:\/\/[^\/]+/, '');
     }
   };
 
@@ -50,7 +109,7 @@ function Forum({ hideHeader = false }) {
         </header>
       )}
 
-      <section className="create-post glass border-radius p-6 mb-8">
+      <section className="create-post glass border-radius mb-8 p-4 md-p-6">
         <form onSubmit={handlePostSubmit}>
           <textarea
             placeholder="What's happening at the camp?"
@@ -59,43 +118,138 @@ function Forum({ hideHeader = false }) {
             className="post-textarea"
             rows="3"
           ></textarea>
-          <div className="post-actions">
-            <button type="button" className="btn-icon">
-              <ImageIcon size={20} /> Photo
+          
+          {imagePreview && (
+            <div className="post-image-preview-container">
+              <button type="button" className="remove-image-btn" onClick={removeImage}>
+                <X size={16} />
+              </button>
+              <img src={imagePreview} alt="Preview" className="post-image-preview" />
+            </div>
+          )}
+
+          <div className="post-actions border-t-subtle">
+            <button 
+              type="button" 
+              className="btn-icon text-primary flex align-center gap-2"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <ImageIcon size={20} /> <span className="font-bold">Photo</span>
             </button>
-            <button type="submit" className="btn btn-primary">Post</button>
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              accept="image/*" 
+              style={{ display: 'none' }} 
+              onChange={handleImageChange}
+            />
+            <button type="submit" className="btn btn-primary px-6" disabled={!newPost.trim() && !postImage}>
+              Post
+            </button>
           </div>
         </form>
       </section>
 
       <section className="posts-feed">
         {posts.map(post => (
-          <div key={post.id} className="post-card glass border-radius p-6 mb-4">
-            <div className="post-header">
-              <div className="avatar" style={{ overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.1)' }}>
+          <div key={post.id} className="post-card glass border-radius mb-6 overflow-hidden">
+            {/* Header */}
+            <div className="post-header p-4 md-p-6 pb-2 flex align-center gap-4">
+              <div className="avatar avatar-round bg-subtle">
                 {post.author_profile_picture ? (
                   <img 
-                    src={post.author_profile_picture.replace(/^https?:\/\/[^\/]+/, '')} 
+                    src={getLocalUrl(post.author_profile_picture)} 
                     alt={post.author_name} 
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                    className="avatar-img"
                   />
                 ) : (
-                  <span style={{ fontWeight: 'bold', fontSize: '1.2rem' }}>{post.author_name.charAt(0).toUpperCase()}</span>
+                  <span className="avatar-initial">{post.author_name.charAt(0).toUpperCase()}</span>
                 )}
               </div>
-              <div className="author-info">
-                <h4>{post.author_name}</h4>
-                <span className="timestamp">{new Date(post.created_at).toLocaleString()}</span>
+              <div className="author-info flex-column">
+                <h4 className="font-bold text-lg m-0 leading-tight">{post.author_name}</h4>
+                <span className="timestamp text-sm text-muted">{new Date(post.created_at).toLocaleString()}</span>
               </div>
             </div>
-            <div className="post-content">
-              <p>{post.content}</p>
+
+            {/* Content Text */}
+            {post.content && (
+              <div className="post-content px-4 md-px-6 pb-4">
+                <p className="whitespace-pre-wrap m-0">{post.content}</p>
+              </div>
+            )}
+
+            {/* Edge-to-edge Image */}
+            {post.image && (
+              <div className="post-image-container bg-black">
+                <img src={getLocalUrl(post.image)} alt="Post content" className="post-feed-image" />
+              </div>
+            )}
+
+            {/* Footer / Interaction Bar */}
+            <div className="post-footer px-4 md-px-6 py-3 bg-black-20 flex align-center">
+              <button 
+                className="btn-icon flex align-center gap-2 text-muted font-bold hover-primary"
+                onClick={() => toggleComments(post.id)}
+              >
+                <MessageSquare size={18} /> {post.comments?.length || 0} Comments
+              </button>
             </div>
-            <div className="post-footer">
-              <button className="btn-icon"><MessageSquare size={18} /> {post.comments?.length || 0} Comments</button>
-            </div>
+
+            {/* Comments Section */}
+            {showComments[post.id] && (
+              <div className="comments-section bg-black-40 p-4 md-p-6">
+                <div className="comments-list flex-column gap-4 mb-4">
+                  {post.comments?.map(comment => (
+                    <div key={comment.id} className="comment flex gap-3">
+                      <div className="comment-avatar avatar-round bg-subtle flex-shrink-0">
+                        {comment.author_profile_picture ? (
+                          <img src={getLocalUrl(comment.author_profile_picture)} alt="" className="avatar-img" />
+                        ) : (
+                          <span className="avatar-initial small">{comment.author_name.charAt(0).toUpperCase()}</span>
+                        )}
+                      </div>
+                      <div className="comment-body bg-subtle-50">
+                        <div className="flex justify-between align-center mb-1">
+                          <span className="font-bold text-sm text-primary">{comment.author_name}</span>
+                          <span className="text-xs text-muted">{new Date(comment.created_at).toLocaleDateString()}</span>
+                        </div>
+                        <p className="text-sm m-0">{comment.content}</p>
+                      </div>
+                    </div>
+                  ))}
+                  {(!post.comments || post.comments.length === 0) && (
+                    <p className="text-sm text-muted italic text-center py-2 m-0">No comments yet. Be the first!</p>
+                  )}
+                </div>
+                
+                {/* Add Comment Input */}
+                <div className="add-comment flex gap-2 align-center mt-2">
+                  <input 
+                    type="text" 
+                    placeholder="Write a reply..." 
+                    className="comment-input"
+                    value={commentInputs[post.id] || ''}
+                    onChange={(e) => setCommentInputs(prev => ({ ...prev, [post.id]: e.target.value }))}
+                    onKeyDown={(e) => e.key === 'Enter' && handleCommentSubmit(post.id)}
+                  />
+                  <button 
+                    className="btn btn-primary btn-round"
+                    onClick={() => handleCommentSubmit(post.id)}
+                    disabled={!commentInputs[post.id]?.trim()}
+                  >
+                    <Send size={16} />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         ))}
+        {posts.length === 0 && (
+          <div className="text-center p-8 glass border-radius">
+            <p className="text-muted m-0">No posts yet. Start the conversation!</p>
+          </div>
+        )}
       </section>
     </div>
   );

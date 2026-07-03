@@ -46,3 +46,35 @@ class InviteCode(models.Model):
     def __str__(self):
         return self.code
 
+class Game(models.Model):
+    name = models.CharField(max_length=100)
+    order = models.IntegerField(default=0, help_text="Order in the leaderboard columns")
+    is_daily_instantane = models.BooleanField(default=False, help_text="If checked, this game automatically calculates daily Instantane reaction winners.")
+    instantane_start_date = models.DateField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['order', 'id']
+
+    def __str__(self):
+        return self.name
+        
+    def save(self, *args, **kwargs):
+        from django.utils import timezone
+        if self.is_daily_instantane and not self.instantane_start_date:
+            self.instantane_start_date = timezone.now().date()
+        elif not self.is_daily_instantane:
+            self.instantane_start_date = None
+        super().save(*args, **kwargs)
+
+class GameScore(models.Model):
+    group = models.ForeignKey(ScoutGroup, on_delete=models.CASCADE, related_name='scores')
+    game = models.ForeignKey(Game, on_delete=models.CASCADE, related_name='scores')
+    points = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('group', 'game')
+
+    def __str__(self):
+        return f"{self.group.name} - {self.game.name}: {self.points}"
