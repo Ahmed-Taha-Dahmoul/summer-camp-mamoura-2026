@@ -5,32 +5,41 @@
 .hero-banner {
   width: 100%;
   height: 300px;
-  background-color: #1e293b;
+  background-color: var(--code-bg);
   background-size: cover;
   background-position: center;
   position: relative;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
-  box-shadow: inset 0 -50px 100px rgba(0, 0, 0, 0.7);
+}
+
+.hero-banner-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 50%;
+  background: linear-gradient(to top, var(--bg), transparent);
 }
 
 .hero-content {
-  position: absolute;
-  bottom: 100px;
-  left: 5%;
+  position: relative;
+  margin-top: -60px;
   display: flex;
   align-items: flex-end;
   gap: 1.5rem;
+  padding: 0 1rem;
+  z-index: 10;
 }
 
 .profile-avatar {
   width: 120px;
   height: 120px;
-  border-radius: 20%;
-  border: 4px solid #0f172a;
-  background-color: #334155;
+  border-radius: 50%;
+  border: 4px solid var(--bg);
+  background-color: var(--code-bg);
   object-fit: cover;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow);
   transition: transform 0.3s ease;
+  flex-shrink: 0;
 }
 
 .profile-avatar:hover {
@@ -38,18 +47,18 @@
 }
 
 .hero-text {
-  padding-bottom: 45px;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+  padding-bottom: 10px;
 }
 
 .hero-text h1 {
   font-size: 2.5rem;
   margin: 0;
-  color: #fff;
+  color: var(--text-h);
+  word-break: break-word;
 }
 
 .hero-text .arif-name {
-  color: #eab308;
+  color: var(--primary-theme-color, var(--primary));
   font-weight: bold;
   font-size: 1.1rem;
   display: flex;
@@ -59,17 +68,17 @@
 }
 
 .profile-body {
-  margin-top: 5rem;
+  margin-top: 3rem;
+  padding: 0 1rem;
 }
 
 .glass-card {
-  background: rgba(30, 41, 59, 0.6);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 1.5rem;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  border-top: 3px solid var(--primary-theme-color, rgba(255, 255, 255, 0.1));
+  box-shadow: var(--shadow);
+  border-top: 3px solid var(--primary-theme-color, var(--primary));
 }
 
 .badges-grid {
@@ -80,8 +89,8 @@
 }
 
 .badge-item {
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.05), rgba(0, 0, 0, 0.2));
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--code-bg);
+  border: 1px solid var(--border);
   border-radius: 16px;
   padding: 1.5rem 1rem;
   display: flex;
@@ -89,73 +98,42 @@
   align-items: center;
   gap: 0.5rem;
   text-align: center;
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: all 0.3s ease;
   cursor: pointer;
   position: relative;
   overflow: hidden;
 }
 
-.badge-item::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 60%);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  pointer-events: none;
-}
-
 .badge-item:hover {
-  transform: translateY(-10px) scale(1.05);
-  border-color: var(--primary-theme-color, rgba(255, 255, 255, 0.2));
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4), 0 0 15px var(--primary-theme-color, rgba(255, 255, 255, 0.2));
-}
-
-.badge-item:hover::before {
-  opacity: 1;
+  transform: translateY(-5px);
+  border-color: var(--primary-theme-color, var(--primary));
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
 }
 
 .badge-icon-wrapper {
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--bg);
   padding: 1rem;
   border-radius: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
-  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.5);
-  color: var(--badge-color, #fff);
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05);
+  color: var(--badge-color, var(--text));
 }
 
 .badge-title {
   font-size: 0.85rem;
   font-weight: 600;
-  color: #e2e8f0;
+  color: var(--text-h);
   margin-top: 0.5rem;
 }
 
 /* Specific Badge Colors */
-.badge-fire {
-  --badge-color: #ef4444;
-}
-
-.badge-knot {
-  --badge-color: #3b82f6;
-}
-
-.badge-compass {
-  --badge-color: #10b981;
-}
-
-.badge-tent {
-  --badge-color: #f59e0b;
-}
-
-.badge-star {
-  --badge-color: #eab308;
-}
+.badge-fire { --badge-color: #ef4444; }
+.badge-knot { --badge-color: #3b82f6; }
+.badge-compass { --badge-color: #10b981; }
+.badge-tent { --badge-color: #f59e0b; }
+.badge-star { --badge-color: #eab308; }
 
 .roster-grid {
   display: grid;
@@ -165,52 +143,57 @@
 }
 
 .roster-card {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--code-bg);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 1rem;
   display: flex;
   align-items: center;
   gap: 1rem;
-  transition: transform 0.2s ease, background 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .roster-card:hover {
   transform: translateX(5px);
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--bg);
+  border-color: var(--primary-theme-color, var(--primary));
 }
 
 .roster-avatar {
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background: #334155;
+  background: var(--bg);
   display: flex;
   justify-content: center;
   align-items: center;
-  color: #94a3b8;
+  color: var(--text-h);
   font-weight: bold;
   font-size: 1.2rem;
+  border: 2px solid var(--border);
 }
 
 @media (max-width: 768px) {
+  .hero-banner {
+    height: 200px;
+  }
   .hero-content {
     flex-direction: column;
     align-items: center;
-    left: 0;
-    width: 100%;
-    bottom: 30px;
+    text-align: center;
     gap: 0.75rem;
   }
   .hero-text {
-    text-align: center;
     padding-bottom: 0;
+  }
+  .hero-text h1 {
+    font-size: 2rem;
   }
   .hero-text .arif-name {
     justify-content: center;
   }
   .profile-body {
-    margin-top: 8rem;
+    margin-top: 2rem;
   }
   .roster-grid {
     grid-template-columns: 1fr;

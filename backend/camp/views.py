@@ -237,3 +237,16 @@ class SpinWheelView(APIView):
             score.save()
             
         return Response({"points": points})
+
+class WheelRecentWinnersView(APIView):
+    def get(self, request):
+        winners = WheelSpin.objects.filter(points_won__gt=0).order_by('-created_at')[:5]
+        data = []
+        for w in winners:
+            data.append({
+                'username': w.user.username,
+                'points': w.points_won,
+                'group_name': w.group.name if w.group else 'No Patrol',
+                'time_ago': w.created_at.strftime('%b %d, %H:%M')
+            })
+        return Response(data)

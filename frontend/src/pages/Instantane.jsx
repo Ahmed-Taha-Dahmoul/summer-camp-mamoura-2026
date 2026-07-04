@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Camera, AlertCircle, RefreshCw, X, Plus, SwitchCamera, Grid, ZapOff, Zap, Users } from 'lucide-react';
+import { Camera, AlertCircle, RefreshCw, X, Plus, SwitchCamera, Grid, ZapOff, Zap, Users, Lock } from 'lucide-react';
 import './Instantane.css';
 
 const EMOJIS = ['❤️', '🔥', '😂', '😮'];
@@ -110,7 +110,7 @@ function Instantane() {
       setPosts(res.data.posts);
       setMyPost(res.data.my_post);
       
-      if (!res.data.has_posted_today || res.data.posts.length === 0) {
+      if (res.data.posts.length === 0) {
         setViewMode('camera');
         startCamera();
       } else {
@@ -131,7 +131,9 @@ function Instantane() {
       const res = await axios.get(`${API_URL}/api/instantane/me/`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setMyInstantsList(res.data);
+      // Sort so newest is at the top
+      const sortedInstants = res.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      setMyInstantsList(sortedInstants);
     } catch (err) {
       console.error("Error fetching my instants:", err);
     }
@@ -183,9 +185,8 @@ function Instantane() {
       return;
     }
     
-    if (flashOn) {
-      setFlashEffect(true);
-    }
+    // Always trigger a quick shutter effect
+    setFlashEffect(true);
     
     setTimeout(() => {
       if (videoRef.current && canvasRef.current) {
@@ -205,15 +206,11 @@ function Instantane() {
       
         canvas.toBlob((blob) => {
           const capturedFile = new File([blob], 'instantane.jpg', { type: 'image/jpeg' });
-          setFile(capturedFile);
-          setPreview(URL.createObjectURL(capturedFile));
-          stopCamera();
-          if (flashOn) {
-            setFlashEffect(false);
-          }
+          setFlashEffect(false);
+          handleUpload(capturedFile);
         }, 'image/jpeg', 0.92);
       }
-    }, flashOn ? 150 : 0);
+    }, 150);
   };
 
   const handleRetake = () => {
@@ -222,13 +219,13 @@ function Instantane() {
     startCamera(facingMode);
   };
 
-  const handleUpload = async () => {
-    if (!file) return;
+  const handleUpload = async (fileToUpload = file) => {
+    if (!fileToUpload) return;
     setUploading(true);
     setError('');
     
     const formData = new FormData();
-    formData.append('image', file);
+    formData.append('image', fileToUpload);
     
     try {
       await axios.post(`${API_URL}/api/instantane/`, formData, {
@@ -237,12 +234,9 @@ function Instantane() {
           'Content-Type': 'multipart/form-data'
         }
       });
-      fetchInstantanes();
-      setViewMode('viewer'); 
+      fetchInstantanes(); // This will refresh the feed with the new post
       setUploading(false);
-      setPreview(null);
-      setFile(null);
-      setCurrentIndex(0); // Reset to first story
+      setCurrentIndex(0);
     } catch (err) {
       console.error("Upload error:", err);
       setError(err.response?.data?.detail || 'Failed to upload photo.');
@@ -377,7 +371,7 @@ function Instantane() {
                   {flashOn ? <Zap size={24} color="#fbbf24" fill="#fbbf24" /> : <ZapOff size={24} />}
                 </button>
                 
-                <button className="capture-btn-outer" onClick={handleCapture}>
+                <button className="capture-btn-outer" onClick={handleCapture} disabled={uploading}>
                   <div className="capture-btn-inner"></div>
                 </button>
                 
@@ -385,30 +379,7 @@ function Instantane() {
                   <RefreshCw size={24} />
                 </button>
               </>
-            ) : (
-              <>
-                <button className="secondary-cam-btn" onClick={handleRetake} disabled={uploading}>
-                  <X size={24} />
-                </button>
-                
-                <button 
-                  style={{ 
-                    background: '#fff', 
-                    color: '#000', 
-                    border: 'none', 
-                    borderRadius: '50px', 
-                    padding: '1rem 2.5rem', 
-                    fontSize: '1rem', 
-                    fontWeight: 600, 
-                    cursor: 'pointer' 
-                  }}
-                  onClick={handleUpload}
-                  disabled={uploading}
-                >
-                  {uploading ? 'Posting...' : 'Share'}
-                </button>
-              </>
-            )}
+            ) : null}
           </div>
         </div>
 
@@ -584,15 +555,29 @@ function Instantane() {
       </div>
 
       {/* Viewer Viewport */}
-      <div className="camera-viewport-wrapper" onClick={handleNextStory} style={{ cursor: 'pointer' }}>
+      <div className="camera-viewport-wrapper" onClick={() => hasPosted && handleNextStory()} style={{ cursor: hasPosted ? 'pointer' : 'default' }}>
         <div className="camera-viewport">
           <img 
             src={posts[currentIndex]?.image ? posts[currentIndex].image.replace(/^https?:\/\/[^\/]+/, '') : ''} 
             alt="Story" 
+            style={!hasPosted ? { filter: 'blur(20px) brightness(0.6)', transform: 'scale(1.1)' } : {}}
           />
           
-          {/* Overlay User Info */}
-          {posts[currentIndex] && (
+          {/* Overlay User Info or Lock Screen */}
+          {!hasPosted ? (
+            <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.3)', zIndex: 20 }}>
+              <Lock size={48} color="white" style={{ marginBottom: '1rem' }} />
+              <p style={{ color: 'white', fontWeight: 'bold', fontSize: '1.2rem', textAlign: 'center', padding: '0 2rem', textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
+                Prenez un Instantané pour débloquer ceux des autres.
+              </p>
+              <button 
+                onClick={(e) => { e.stopPropagation(); setViewMode('camera'); startCamera(); }}
+                style={{ marginTop: '1.5rem', background: 'white', color: 'black', padding: '0.75rem 1.5rem', borderRadius: '24px', fontWeight: 'bold', border: 'none', cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}
+              >
+                Prendre un Instantané
+              </button>
+            </div>
+          ) : posts[currentIndex] && (
             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, padding: '1.5rem', background: 'linear-gradient(rgba(0,0,0,0.7), transparent)', display: 'flex', alignItems: 'center', gap: '0.75rem', zIndex: 10 }}>
               {posts[currentIndex].user.profile_picture ? (
                 <img src={posts[currentIndex].user.profile_picture.replace(/^https?:\/\/[^\/]+/, '')} style={{ width: '44px', height: '44px', borderRadius: '50%', objectFit: 'cover', border: '2px solid white' }} alt="" />
@@ -615,25 +600,27 @@ function Instantane() {
       </div>
 
       {/* Reactions Controls */}
-      <div className="camera-controls">
-        <div className="instants-reactions" style={{ display: 'flex', justifyContent: 'center', gap: '1.5rem', width: '100%', padding: '0 2rem' }}>
-          {EMOJIS.map(emoji => {
-            const isActive = posts[currentIndex]?.my_reaction === emoji;
-            return (
-              <button 
-                key={emoji}
-                className={`reaction-btn ${isActive ? 'active' : ''}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if(posts[currentIndex]) handleReaction(posts[currentIndex].id, emoji);
-                }}
-              >
-                {emoji}
-              </button>
-            );
-          })}
+      {hasPosted && (
+        <div className="camera-controls">
+          <div className="instants-reactions" style={{ display: 'flex', justifyContent: 'center', gap: '1.5rem', width: '100%', padding: '0 2rem' }}>
+            {EMOJIS.map(emoji => {
+              const isActive = posts[currentIndex]?.my_reaction === emoji;
+              return (
+                <button 
+                  key={emoji}
+                  className={`reaction-btn ${isActive ? 'active' : ''}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if(posts[currentIndex]) handleReaction(posts[currentIndex].id, emoji);
+                  }}
+                >
+                  {emoji}
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
 
     </div>
   );

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { MessageSquare, Image as ImageIcon, Send, X } from 'lucide-react';
+import { MessageSquare, Image as ImageIcon, Send, X, Flag, Star } from 'lucide-react';
 import './Forum.css';
 
 function Forum({ hideHeader = false }) {
@@ -9,6 +9,7 @@ function Forum({ hideHeader = false }) {
   const [newPost, setNewPost] = useState('');
   const [postImage, setPostImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const [selectedUser, setSelectedUser] = useState(null);
   
   const [showComments, setShowComments] = useState({});
   const [commentInputs, setCommentInputs] = useState({});
@@ -155,7 +156,11 @@ function Forum({ hideHeader = false }) {
           <div key={post.id} className="post-card glass border-radius mb-6 overflow-hidden">
             {/* Header */}
             <div className="post-header p-4 md-p-6 pb-2 flex align-center gap-4">
-              <div className="avatar avatar-round bg-subtle">
+              <div 
+                className="avatar avatar-round bg-subtle" 
+                style={{ cursor: 'pointer' }}
+                onClick={() => setSelectedUser(post)}
+              >
                 {post.author_profile_picture ? (
                   <img 
                     src={getLocalUrl(post.author_profile_picture)} 
@@ -167,7 +172,13 @@ function Forum({ hideHeader = false }) {
                 )}
               </div>
               <div className="author-info flex-column">
-                <h4 className="font-bold text-lg m-0 leading-tight">{post.author_name}</h4>
+                <h4 
+                  className="font-bold text-lg m-0 leading-tight hover-primary" 
+                  style={{ cursor: 'pointer', transition: 'color 0.2s' }}
+                  onClick={() => setSelectedUser(post)}
+                >
+                  {post.author_name}
+                </h4>
                 <span className="timestamp text-sm text-muted">{new Date(post.created_at).toLocaleString()}</span>
               </div>
             </div>
@@ -202,7 +213,11 @@ function Forum({ hideHeader = false }) {
                 <div className="comments-list flex-column gap-4 mb-4">
                   {post.comments?.map(comment => (
                     <div key={comment.id} className="comment flex gap-3">
-                      <div className="comment-avatar avatar-round bg-subtle flex-shrink-0">
+                      <div 
+                        className="comment-avatar avatar-round bg-subtle flex-shrink-0"
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => setSelectedUser(comment)}
+                      >
                         {comment.author_profile_picture ? (
                           <img src={getLocalUrl(comment.author_profile_picture)} alt="" className="avatar-img" />
                         ) : (
@@ -211,7 +226,13 @@ function Forum({ hideHeader = false }) {
                       </div>
                       <div className="comment-body bg-subtle-50">
                         <div className="flex justify-between align-center mb-1">
-                          <span className="font-bold text-sm text-primary">{comment.author_name}</span>
+                          <span 
+                            className="font-bold text-sm text-primary hover-primary"
+                            style={{ cursor: 'pointer' }}
+                            onClick={() => setSelectedUser(comment)}
+                          >
+                            {comment.author_name}
+                          </span>
                           <span className="text-xs text-muted">{new Date(comment.created_at).toLocaleDateString()}</span>
                         </div>
                         <p className="text-sm m-0">{comment.content}</p>
@@ -251,6 +272,50 @@ function Forum({ hideHeader = false }) {
           </div>
         )}
       </section>
+
+      {/* User Profile Popup Modal */}
+      {selectedUser && (
+        <div className="user-profile-modal-overlay" onClick={() => setSelectedUser(null)}>
+          <div className="user-profile-modal-card glass-card animate-fade-in" onClick={(e) => e.stopPropagation()}>
+            <button 
+              onClick={() => setSelectedUser(null)}
+              style={{ position: 'absolute', top: '15px', right: '15px', background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+            >
+              <X size={24} />
+            </button>
+            
+            <div className="mx-auto mb-4" style={{ width: '90px', height: '90px', borderRadius: '50%', overflow: 'hidden', border: '3px solid var(--primary)', backgroundColor: 'var(--bg)', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0 auto', boxShadow: '0 8px 16px rgba(0,0,0,0.3)' }}>
+              {selectedUser.author_profile_picture ? (
+                <img src={getLocalUrl(selectedUser.author_profile_picture)} alt={selectedUser.author_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                <span style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'var(--text)' }}>{selectedUser.author_name.charAt(0).toUpperCase()}</span>
+              )}
+            </div>
+            
+            <h2 style={{ color: 'var(--text-h)', margin: '0 0 0.25rem 0', fontSize: '1.5rem', fontWeight: 'bold' }}>{selectedUser.author_full_name}</h2>
+            <p className="text-muted" style={{ margin: '0 0 1.5rem 0', fontSize: '0.9rem' }}>@{selectedUser.author_name}</p>
+            
+            <div className="flex flex-col gap-3" style={{ textAlign: 'left', background: 'var(--bg)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border)' }}>
+              <div className="flex items-center gap-3">
+                <div style={{ background: 'rgba(59, 130, 246, 0.15)', padding: '8px', borderRadius: '10px', color: '#3b82f6', display: 'flex' }}><Flag size={18} /></div>
+                <div>
+                  <div className="text-xs text-muted font-bold text-uppercase" style={{ letterSpacing: '0.5px' }}>Patrol</div>
+                  <div className="font-bold text-sm" style={{ color: 'var(--text-h)' }}>{selectedUser.author_patrol_name}</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div style={{ background: 'rgba(234, 179, 8, 0.15)', padding: '8px', borderRadius: '10px', color: '#eab308', display: 'flex' }}><Star size={18} /></div>
+                <div>
+                  <div className="text-xs text-muted font-bold text-uppercase" style={{ letterSpacing: '0.5px' }}>Role</div>
+                  <div className="font-bold text-sm" style={{ color: 'var(--text-h)' }}>{selectedUser.author_role}</div>
+                </div>
+              </div>
+            </div>
+            
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

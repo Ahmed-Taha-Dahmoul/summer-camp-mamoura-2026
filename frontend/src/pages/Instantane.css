@@ -576,3 +576,18 @@ body {
     padding: 1rem 0.5rem;
   }
 }
+
+@media (max-width: 768px) {
+  .camera-view-container {
+    min-height: 100svh;
+  }
+  
+  .story-viewer-overlay {
+    height: 100svh;
+    z-index: 9999;
+  }
+
+  .camera-controls {
+    padding-bottom: 2rem;
+  }
+}

@@ -17,6 +17,17 @@ class ScoutGroup(models.Model):
     description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    @property
+    def total_xp(self):
+        from django.db.models import Sum
+        game_pts = self.scores.aggregate(Sum('points'))['points__sum'] or 0
+        wheel_pts = self.wheelspin_set.aggregate(Sum('points_won'))['points_won__sum'] or 0
+        return game_pts + wheel_pts
+
+    @property
+    def level(self):
+        return (self.total_xp // 1000) + 1
+
     def __str__(self):
         return self.name
 
@@ -87,3 +98,24 @@ class WheelSpin(models.Model):
 
     def __str__(self):
         return f"{self.user.username} won {self.points_won} pts at {self.created_at}"
+
+class Badge(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    icon_name = models.CharField(max_length=50, help_text="Lucide icon name (e.g. Flame, Tent, Compass)")
+    icon_color_class = models.CharField(max_length=50, help_text="CSS class for color (e.g. badge-fire, badge-knot)")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
+class EarnedBadge(models.Model):
+    group = models.ForeignKey(ScoutGroup, on_delete=models.CASCADE, related_name='earned_badges')
+    badge = models.ForeignKey(Badge, on_delete=models.CASCADE, related_name='earned_by')
+    earned_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('group', 'badge')
+
+    def __str__(self):
+        return f"{self.group.name} earned {self.badge.name}"

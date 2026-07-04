@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { ChefHat, PenTool, Music, User as UserIcon, Star, Flag } from 'lucide-react';
+import { ChefHat, PenTool, Music, User as UserIcon, Star, Flag, Palette, Image as ImageIcon, Monitor, UploadCloud, Save, Bird, Moon, Mountain, Sun, Compass, Tent } from 'lucide-react';
 import './Dashboard.css';
 
 const ROLE_LABELS = {
@@ -47,6 +47,28 @@ function Dashboard({ hideHeader = false }) {
     baseURL: '/api/',
     headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` }
   });
+
+  const getBannerGradient = (preset) => {
+    switch(preset) {
+      case 'forest': return 'linear-gradient(135deg, #064e3b, #10b981)';
+      case 'mountain': return 'linear-gradient(135deg, #1e293b, #94a3b8)';
+      case 'space': return 'linear-gradient(135deg, #0f172a, #8b5cf6)';
+      case 'fire': return 'linear-gradient(135deg, #7f1d1d, #f59e0b)';
+      default: return 'linear-gradient(45deg, #1e293b, #3b82f6)';
+    }
+  };
+
+  const renderAvatarPreset = (preset) => {
+    switch(preset) {
+      case 'eagle': return <Bird size={48} color="var(--text)" />;
+      case 'wolf': return <Moon size={48} color="var(--text)" />;
+      case 'bear': return <Mountain size={48} color="var(--text)" />;
+      case 'lion': return <Sun size={48} color="var(--text)" />;
+      case 'compass': return <Compass size={48} color="var(--text)" />;
+      case 'tent': 
+      default: return <Tent size={48} color="var(--text)" />;
+    }
+  };
 
   useEffect(() => {
     fetchData();
@@ -233,80 +255,207 @@ function Dashboard({ hideHeader = false }) {
           </div>
 
           {activeTab === 'customization' && (
-            <div className="glass p-6 border-radius mb-8 animate-fade-in">
-              <h3>Advanced Patrol Customization</h3>
-              <p className="text-muted text-sm mb-6">Build your Steam-like public profile. Choose a theme color, preset assets, or upload your own!</p>
-              
-              <form onSubmit={handleUpdateProfile} className="flex flex-col gap-6">
-                <div className="form-group p-4" style={{ background: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>
-                  <label className="font-bold mb-2 block">Theme Aura (Color)</label>
-                  <div className="flex gap-4">
-                    {['blue', 'red', 'green', 'purple', 'gold'].map(color => (
-                      <div 
-                        key={color}
-                        onClick={() => setThemeColor(color)}
-                        className={`cursor-pointer rounded-full w-10 h-10 flex align-center justify-center`}
-                        style={{ 
-                          backgroundColor: `var(--theme-${color}, ${color})`,
-                          border: themeColor === color ? '3px solid white' : '2px solid transparent',
-                          boxShadow: themeColor === color ? `0 0 15px var(--theme-${color}, ${color})` : 'none'
-                        }}
-                      >
-                        {themeColor === color && <span className="text-white">✓</span>}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="form-group p-4" style={{ background: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>
-                    <label className="font-bold mb-2 block">Prebuilt Avatar</label>
-                    <select 
-                      value={avatarPreset} 
-                      onChange={e => setAvatarPreset(e.target.value)}
-                      className="p-2 w-full border border-gray-600 rounded bg-gray-800 text-white mb-4"
-                    >
-                      <option value="tent">Tent Base</option>
-                      <option value="eagle">Eagle Eye</option>
-                      <option value="wolf">Lone Wolf</option>
-                      <option value="bear">Grizzly Bear</option>
-                      <option value="lion">Lion King</option>
-                      <option value="compass">Navigator</option>
-                    </select>
-                    <label className="text-sm text-muted block mb-1">Or upload custom Avatar (Overrides preset):</label>
-                    <input type="file" onChange={e => setAvatarFile(e.target.files[0])} accept="image/*" />
-                  </div>
-
-                  <div className="form-group p-4" style={{ background: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>
-                    <label className="font-bold mb-2 block">Prebuilt Banner</label>
-                    <select 
-                      value={bannerPreset} 
-                      onChange={e => setBannerPreset(e.target.value)}
-                      className="p-2 w-full border border-gray-600 rounded bg-gray-800 text-white mb-4"
-                    >
-                      <option value="forest">Mystic Forest</option>
-                      <option value="mountain">Snowy Mountain</option>
-                      <option value="space">Deep Space</option>
-                      <option value="fire">Roaring Fire</option>
-                    </select>
-                    <label className="text-sm text-muted block mb-1">Or upload custom Banner (Overrides preset):</label>
-                    <input type="file" onChange={e => setBannerFile(e.target.files[0])} accept="image/*" />
-                  </div>
-                </div>
-
-                <div className="form-group p-4" style={{ background: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>
-                  <label className="font-bold mb-2 block">Patrol Legend (Description)</label>
-                  <textarea 
-                    value={editDesc} 
-                    onChange={e => setEditDesc(e.target.value)}
-                    className="p-3 w-full border border-gray-600 rounded bg-gray-800 text-white"
-                    rows={4}
-                    placeholder="Tell the grand story of your patrol..."
-                  />
-                </div>
+            <div className="glass p-6 border-radius mb-8 animate-fade-in" style={{ borderTop: `4px solid var(--theme-${themeColor}, var(--primary))` }}>
+              <div className="flex align-center gap-3 mb-2">
+                <Palette className="text-primary" size={24} />
+                <h3 className="m-0 text-2xl">Advanced Patrol Customization</h3>
+              </div>
+              <p className="text-muted text-sm mb-6">Build your Steam-like public profile. Choose a theme color, preset assets, or upload your own to stand out!</p>
+              <div className="grid grid-cols-3 gap-8">
                 
-                <button type="submit" className="btn btn-secondary self-start px-8">Save Customization</button>
-              </form>
+                {/* Left Column: Controls (col-span-2) */}
+                <div className="lg-col-span-2">
+                  <form onSubmit={handleUpdateProfile} className="flex flex-col gap-6">
+                    
+                    {/* Theme Selection */}
+                    <div className="customization-card">
+                      <div className="flex align-center gap-2 mb-4">
+                        <Monitor size={18} className="text-muted" />
+                        <label className="font-bold m-0 text-lg">Theme Aura</label>
+                      </div>
+                      <div className="flex flex-wrap gap-4">
+                        {[
+                          { id: 'blue', label: 'Ocean' },
+                          { id: 'red', label: 'Inferno' },
+                          { id: 'green', label: 'Nature' },
+                          { id: 'purple', label: 'Mystic' },
+                          { id: 'gold', label: 'Royal' }
+                        ].map(color => (
+                          <div 
+                            key={color.id}
+                            onClick={() => setThemeColor(color.id)}
+                            className="theme-selector-btn"
+                            style={{ opacity: themeColor === color.id ? 1 : 0.6 }}
+                          >
+                            <div 
+                              className="theme-selector-circle"
+                              style={{ 
+                                background: `linear-gradient(135deg, var(--theme-${color.id}, ${color.id}), rgba(0,0,0,0.2))`,
+                                border: themeColor === color.id ? '2px solid var(--text-h)' : '2px solid transparent',
+                                boxShadow: themeColor === color.id ? `0 0 15px var(--theme-${color.id}, ${color.id})` : 'none',
+                                transform: themeColor === color.id ? 'scale(1.1)' : 'scale(1)'
+                              }}
+                            >
+                              {themeColor === color.id && <Star size={20} color="white" />}
+                            </div>
+                            <span className="text-xs font-bold" style={{ color: 'var(--text-h)' }}>{color.label}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Assets Selection */}
+                    <div className="grid grid-cols-2 gap-6">
+                      {/* Avatar Section */}
+                      <div className="customization-card flex flex-col">
+                        <div className="flex align-center gap-2 mb-4">
+                          <UserIcon size={18} className="text-muted" />
+                          <label className="font-bold m-0 text-lg">Patrol Avatar</label>
+                        </div>
+                        
+                        <div className="flex-col gap-4 flex" style={{ flex: 1 }}>
+                          <select 
+                            value={avatarPreset} 
+                            onChange={e => setAvatarPreset(e.target.value)}
+                            className="premium-select cursor-pointer"
+                          >
+                            <option value="tent">⛺ Tent Base</option>
+                            <option value="eagle">🦅 Eagle Eye</option>
+                            <option value="wolf">🐺 Lone Wolf</option>
+                            <option value="bear">🐻 Grizzly Bear</option>
+                            <option value="lion">🦁 Lion King</option>
+                            <option value="compass">🧭 Navigator</option>
+                          </select>
+
+                          <div className="upload-zone" onClick={() => document.getElementById('avatar-upload').click()}>
+                            <UploadCloud size={28} className="text-muted mb-2" />
+                            <span className="text-sm font-bold" style={{ color: 'var(--text-h)' }}>Upload Custom Avatar</span>
+                            <span className="text-xs text-muted mt-1">PNG, JPG up to 2MB</span>
+                            <input 
+                              id="avatar-upload"
+                              type="file" 
+                              onChange={e => setAvatarFile(e.target.files[0])} 
+                              accept="image/*" 
+                              style={{ display: 'none' }}
+                            />
+                            {avatarFile && <span className="mt-2 text-xs" style={{ color: 'var(--primary)' }}>Selected: {avatarFile.name}</span>}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Banner Section */}
+                      <div className="customization-card flex flex-col">
+                        <div className="flex align-center gap-2 mb-4">
+                          <ImageIcon size={18} className="text-muted" />
+                          <label className="font-bold m-0 text-lg">Profile Banner</label>
+                        </div>
+                        
+                        <div className="flex-col gap-4 flex" style={{ flex: 1 }}>
+                          <select 
+                            value={bannerPreset} 
+                            onChange={e => setBannerPreset(e.target.value)}
+                            className="premium-select cursor-pointer"
+                          >
+                            <option value="forest">🌲 Mystic Forest</option>
+                            <option value="mountain">⛰️ Snowy Mountain</option>
+                            <option value="space">🌌 Deep Space</option>
+                            <option value="fire">🔥 Roaring Fire</option>
+                          </select>
+
+                          <div className="upload-zone" onClick={() => document.getElementById('banner-upload').click()}>
+                            <UploadCloud size={28} className="text-muted mb-2" />
+                            <span className="text-sm font-bold" style={{ color: 'var(--text-h)' }}>Upload Custom Banner</span>
+                            <span className="text-xs text-muted mt-1">Recommended 1200x300px</span>
+                            <input 
+                              id="banner-upload"
+                              type="file" 
+                              onChange={e => setBannerFile(e.target.files[0])} 
+                              accept="image/*" 
+                              style={{ display: 'none' }}
+                            />
+                            {bannerFile && <span className="mt-2 text-xs" style={{ color: 'var(--primary)' }}>Selected: {bannerFile.name}</span>}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Legend */}
+                    <div className="customization-card">
+                      <div className="flex align-center gap-2 mb-4">
+                        <PenTool size={18} className="text-muted" />
+                        <label className="font-bold m-0 text-lg">Patrol Legend</label>
+                      </div>
+                      <textarea 
+                        value={editDesc} 
+                        onChange={e => setEditDesc(e.target.value)}
+                        className="premium-textarea"
+                        rows={4}
+                        style={{ resize: 'vertical' }}
+                        placeholder="Tell the grand story of your patrol... Who are you? What is your motto?"
+                      />
+                    </div>
+                    
+                    <button type="submit" className="btn btn-primary self-start px-8 py-3 flex align-center gap-2 font-bold text-lg" style={{ boxShadow: `0 4px 20px rgba(0,0,0,0.1)`, transition: 'transform 0.2s' }} onMouseOver={e => e.currentTarget.style.transform = 'scale(1.05)'} onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}>
+                      <Save size={20} />
+                      Save Customization
+                    </button>
+                  </form>
+                </div>
+
+                {/* Right Column: Live Preview */}
+                <div className="flex flex-col gap-4">
+                  <div className="flex align-center gap-2 mb-2">
+                    <Monitor size={18} className="text-muted" />
+                    <h4 className="m-0 text-lg font-bold text-muted">Live Preview</h4>
+                  </div>
+                  
+                  <div className="live-preview-card" style={{ 
+                    border: `1px solid var(--theme-${themeColor}, var(--border))`,
+                    boxShadow: `var(--shadow)`
+                  }}>
+                    {/* Banner Area */}
+                    <div className="preview-banner" style={{ background: bannerFile ? `url(${URL.createObjectURL(bannerFile)}) center/cover` : getBannerGradient(bannerPreset) }}>
+                      <div className="preview-banner-overlay"></div>
+                    </div>
+                    
+                    {/* Avatar Area */}
+                    <div className="preview-content">
+                      <div className="preview-avatar" style={{ borderColor: `var(--theme-${themeColor}, var(--bg))`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {avatarFile ? (
+                          <img src={URL.createObjectURL(avatarFile)} alt="Avatar" />
+                        ) : (
+                          renderAvatarPreset(avatarPreset)
+                        )}
+                      </div>
+                      
+                      <div className="mt-4">
+                        <h3 className="m-0 text-2xl font-bold flex align-center gap-2" style={{ color: 'var(--text-h)', wordBreak: 'break-word' }}>
+                          {myGroup?.group_name || 'My Awesome Patrol'}
+                          {themeColor === 'gold' && <Star size={20} color="#eab308" style={{ flexShrink: 0 }} />}
+                        </h3>
+                        <div className="flex flex-wrap gap-2 mt-2 mb-4">
+                           <span className="level-badge" style={{ color: `var(--theme-${themeColor}, var(--primary))` }}>Level {myGroup?.level || 1}</span>
+                           <span className="member-badge" style={{ color: `var(--theme-${themeColor}, var(--primary))` }}>{myGroup?.users?.length || 1} Member{myGroup?.users?.length !== 1 ? 's' : ''}</span>
+                        </div>
+                        <p className="text-sm" style={{ color: 'var(--text)', fontStyle: 'italic', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                          "{editDesc || 'Tell the grand story of your patrol... Who are you? What is your motto?'}"
+                        </p>
+                      </div>
+                      
+                      <div className="mt-4 pt-4 border-t" style={{ borderTopColor: 'var(--border)' }}>
+                        <div className="flex justify-between text-xs mb-1 font-bold">
+                          <span style={{ color: `var(--theme-${themeColor}, var(--primary))` }}>Patrol XP</span>
+                          <span className="text-muted">{(myGroup?.total_xp || 0) % 1000} / 1000 XP</span>
+                        </div>
+                        <div className="xp-bar-container">
+                          <div className="xp-bar-fill" style={{ width: `${((myGroup?.total_xp || 0) % 1000) / 10}%`, background: `var(--theme-${themeColor}, var(--primary))` }}></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
             </div>
           )}
 

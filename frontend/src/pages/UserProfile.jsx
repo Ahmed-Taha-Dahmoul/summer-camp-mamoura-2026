@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Camera, Save, User as UserIcon } from 'lucide-react';
+import { Camera, Save, User as UserIcon, LogOut, ChevronRight } from 'lucide-react';
 import './UserProfile.css';
 
 function UserProfile() {
@@ -82,7 +82,6 @@ function UserProfile() {
         }
       });
       alert('Profile updated successfully!');
-      // Force reload to update navbar
       window.location.reload();
     } catch (err) {
       console.error(err.response?.data || err);
@@ -91,112 +90,102 @@ function UserProfile() {
     }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('access_token');
+    window.location.href = '/login';
+  };
+
   if (loading) return <div className="container mt-8 text-center">Loading Profile...</div>;
   if (!profile) return null;
 
   return (
-    <div className="container user-profile-page animate-fade-in">
-      <div className="profile-header glass mb-8">
-        <div className="profile-image-section">
-          <div className="image-wrapper">
-            {previewImage ? (
-              <img src={previewImage} alt="Profile Preview" className="profile-pic-preview" />
-            ) : (
-              <div className="profile-pic-placeholder">
-                <UserIcon size={64} />
-              </div>
-            )}
-            <label htmlFor="profile-upload" className="image-upload-btn">
-              <Camera size={16} />
-              <span>Change</span>
-            </label>
-            <input 
-              id="profile-upload" 
-              type="file" 
-              accept="image/*" 
-              onChange={handleImageChange} 
-              style={{ display: 'none' }} 
-            />
-          </div>
+    <div className="user-profile-page animate-fade-in">
+      <div className="profile-header-card">
+        <div className="image-wrapper">
+          {previewImage ? (
+            <img src={previewImage} alt="Profile" className="profile-pic-preview" />
+          ) : (
+            <div className="profile-pic-placeholder">
+              <UserIcon size={48} />
+            </div>
+          )}
+          <label htmlFor="profile-upload" className="image-upload-btn">
+            <Camera size={18} />
+          </label>
+          <input 
+            id="profile-upload" 
+            type="file" 
+            accept="image/*" 
+            onChange={handleImageChange} 
+            style={{ display: 'none' }} 
+          />
         </div>
-        <div className="profile-title-section">
-          <h1>{profile.first_name || profile.username} {profile.last_name}</h1>
-          <div className="badges-row">
-            <span className="role-badge" style={{ backgroundColor: 'var(--primary)', color: 'white', padding: '0.2rem 0.6rem', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 'bold' }}>
-              {profile.role}
-            </span>
-            <span className="username-badge text-muted">@{profile.username}</span>
-          </div>
+        
+        <h1 className="profile-name">{profile.first_name || profile.username} {profile.last_name}</h1>
+        <p className="profile-username">@{profile.username}</p>
+        
+        <div className="mt-2">
+          <span className="role-badge">{profile.role}</span>
         </div>
       </div>
 
-      <div className="profile-body glass p-8 border-radius">
-        <h2 className="mb-6">Personal Information</h2>
-        <form onSubmit={handleSubmit} className="profile-form">
-          <div className="grid grid-cols-2 gap-6 mb-6">
-            <div className="form-group">
+      <form onSubmit={handleSubmit} className="profile-form">
+        <div className="settings-section">
+          <h3 className="settings-section-title">Account Details</h3>
+          <div className="settings-group">
+            <div className="settings-row">
               <label>First Name</label>
-              <input 
-                type="text" 
-                name="first_name" 
-                value={formData.first_name} 
-                onChange={handleChange} 
-                className="custom-input"
-              />
+              <input type="text" name="first_name" value={formData.first_name} onChange={handleChange} placeholder="First Name" />
             </div>
-            <div className="form-group">
+            <div className="settings-divider"></div>
+            <div className="settings-row">
               <label>Last Name</label>
-              <input 
-                type="text" 
-                name="last_name" 
-                value={formData.last_name} 
-                onChange={handleChange} 
-                className="custom-input"
-              />
+              <input type="text" name="last_name" value={formData.last_name} onChange={handleChange} placeholder="Last Name" />
+            </div>
+            <div className="settings-divider"></div>
+            <div className="settings-row">
+              <label>Email</label>
+              <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="Email Address" />
+            </div>
+            <div className="settings-divider"></div>
+            <div className="settings-row">
+              <label>Phone</label>
+              <input type="tel" name="phone_number" value={formData.phone_number} onChange={handleChange} placeholder="+216..." />
             </div>
           </div>
+        </div>
 
-          <div className="grid grid-cols-2 gap-6 mb-6">
-            <div className="form-group">
-              <label>Email Address</label>
-              <input 
-                type="email" 
-                name="email" 
-                value={formData.email} 
-                onChange={handleChange} 
-                className="custom-input"
-              />
-            </div>
-            <div className="form-group">
-              <label>Phone Number</label>
-              <input 
-                type="tel" 
-                name="phone_number" 
-                value={formData.phone_number} 
-                onChange={handleChange} 
-                placeholder="+1 234 567 890"
-                className="custom-input"
-              />
-            </div>
-          </div>
-
-          <div className="form-group mb-8">
-            <label>About Me (Bio)</label>
+        <div className="settings-section mt-6">
+          <h3 className="settings-section-title">About Me</h3>
+          <div className="settings-group">
             <textarea 
               name="bio" 
               value={formData.bio} 
               onChange={handleChange} 
-              className="custom-input"
+              className="settings-textarea"
               rows={4}
-              placeholder="Tell us a little bit about yourself, your scouting journey, and your hobbies..."
+              placeholder="Tell everyone a little bit about yourself..."
             />
           </div>
+        </div>
 
-          <button type="submit" className="btn btn-secondary flex align-center gap-2">
-            <Save size={18} />
+        <div className="settings-section mt-6 px-4">
+          <button type="submit" className="btn btn-secondary w-full" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', padding: '1rem', borderRadius: '12px', fontSize: '1rem', fontWeight: 600 }}>
+            <Save size={20} />
             <span>Save Changes</span>
           </button>
-        </form>
+        </div>
+      </form>
+
+      <div className="settings-section mt-8">
+        <div className="settings-group">
+          <button type="button" className="settings-row action-row" onClick={handleLogout}>
+            <div className="logout-content">
+              <LogOut size={20} className="text-danger" />
+              <span className="text-danger font-bold">Log Out</span>
+            </div>
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -52,12 +52,20 @@
 
 body {
   margin: 0;
+  overscroll-behavior-y: none; /* Prevent pull-to-refresh on mobile */
 }
 
 #root {
   width: 100%;
   min-height: 100svh;
   box-sizing: border-box;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 768px) {
+  #root {
+    padding-bottom: 70px; /* Space for bottom nav */
+  }
 }
 
 h1,

@@ -14,7 +14,7 @@
    ────────────────────────────────────────── */
 .hero {
   position: relative;
-  min-height: 100svh;
+  min-height: 85svh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -31,7 +31,7 @@
 .hero-particles {
   position: absolute;
   inset: -20%;
-  min-height: 100svh;
+  min-height: 85svh;
   pointer-events: none;
   z-index: 0;
 }
@@ -586,13 +586,6 @@
 
 .contact-divider {
   display: inline-block;
-
-.logged-in-hero {
-  position: relative;
-  padding: 6rem 1rem 4rem;
-
-.contact-divider {
-  display: inline-block;
   width: 1px;
   height: 28px;
   background: rgba(255, 255, 255, 0.15);
@@ -638,14 +631,16 @@
 .quick-action-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.25rem; padding: 0.6rem 0.2rem; border-radius: 12px; font-weight: 700; font-size: 0.75rem; text-decoration: none; white-space: nowrap; transition: all 0.2s ease; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.1); }
 .quick-action-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.2); }
 .quick-action-btn:active { transform: translateY(1px); }
-.qa-green { background: var(--primary); color: white; }
-.qa-green:hover { background: #15803d; }
-.qa-amber { background: #f59e0b; color: white; }
-.qa-amber:hover { background: #d97706; }
-.qa-purple { background: #9333ea; color: white; }
-.qa-purple:hover { background: #7e22ce; }
-.qa-blue { background: #3b82f6; color: white; }
-.qa-blue:hover { background: #2563eb; }
+.qa-green { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border-color: rgba(16, 185, 129, 0.3); }
+.qa-green:hover { background: linear-gradient(135deg, #059669 0%, #047857 100%); box-shadow: 0 6px 15px rgba(16, 185, 129, 0.3); }
+.qa-amber { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; border-color: rgba(245, 158, 11, 0.3); }
+.qa-amber:hover { background: linear-gradient(135deg, #d97706 0%, #b45309 100%); box-shadow: 0 6px 15px rgba(245, 158, 11, 0.3); }
+.qa-purple { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; border-color: rgba(139, 92, 246, 0.3); }
+.qa-purple:hover { background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); box-shadow: 0 6px 15px rgba(139, 92, 246, 0.3); }
+.qa-blue { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border-color: rgba(59, 130, 246, 0.3); }
+.qa-blue:hover { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); box-shadow: 0 6px 15px rgba(59, 130, 246, 0.3); }
+.qa-red { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border-color: rgba(239, 68, 68, 0.3); }
+.qa-red:hover { background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); box-shadow: 0 6px 15px rgba(239, 68, 68, 0.3); }
 .forum-feed-container { max-width: 800px; margin: 0 auto; padding: 0 1rem; }
 
 /* ── RESPONSIVE 768px ── */

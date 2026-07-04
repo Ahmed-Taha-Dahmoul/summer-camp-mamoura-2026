@@ -12,10 +12,13 @@ import Games from './pages/Games';
 import Wheel from './pages/Wheel';
 import ProtectedRoute from './components/ProtectedRoute';
 
+import BottomNav from './components/BottomNav';
+
 function App() {
   return (
     <Router>
       <Navbar />
+      <BottomNav />
       <main>
         <Routes>
           <Route path="/" element={<Home />} />

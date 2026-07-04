@@ -46,6 +46,51 @@ function Games() {
     return <div className="container text-center py-20 text-white">Loading Leaderboard...</div>;
   }
 
+  const renderPodium = () => {
+    // Need at least something to show, but optimally 3. If less than 3, just skip or handle gracefully.
+    // We will place them as [2nd, 1st, 3rd] for a classic podium layout.
+    const top3 = [];
+    if (leaderboard.length >= 2) top3.push(leaderboard[1]); // 2nd place
+    if (leaderboard.length >= 1) top3.push(leaderboard[0]); // 1st place
+    if (leaderboard.length >= 3) top3.push(leaderboard[2]); // 3rd place
+
+    if (top3.length === 0) return null;
+
+    return (
+      <div className="podium-wrapper">
+        <div className="podium-container">
+          {top3.map((group, index) => {
+            // Determine actual rank based on position in our [2nd, 1st, 3rd] array
+            let rank = 1;
+            if (leaderboard.length >= 2 && index === 0) rank = 2;
+            else if (leaderboard.length >= 1 && index === (leaderboard.length >= 2 ? 1 : 0)) rank = 1;
+            else rank = 3;
+
+            return (
+              <div key={group.group_id || index} className={`podium-step rank-${rank}`}>
+                <div className="podium-avatar-wrapper">
+                  {group.group_profile ? (
+                    <img src={getLocalUrl(group.group_profile)} alt="" className="podium-avatar" />
+                  ) : (
+                    <div className="podium-avatar-placeholder">{group.group_name.charAt(0)}</div>
+                  )}
+                  {rank === 1 && <Trophy size={24} className="podium-badge rank-gold" />}
+                  {rank === 2 && <Medal size={20} className="podium-badge rank-silver" />}
+                  {rank === 3 && <Medal size={20} className="podium-badge rank-bronze" />}
+                </div>
+                <span className="podium-name">{group.group_name}</span>
+                <span className="podium-score">{group.total_score} pts</span>
+                <div className="podium-block">
+                  <span className="podium-rank-text">{rank}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="games-page animate-fade-in">
       <div className="games-hero">
@@ -56,6 +101,8 @@ function Games() {
       </div>
 
       <div className="container pb-12">
+        {renderPodium()}
+
         <div className="glass border-radius overflow-hidden shadow-xl leaderboard-container">
           <div className="table-responsive">
             <table className="leaderboard-table w-full text-left border-collapse">

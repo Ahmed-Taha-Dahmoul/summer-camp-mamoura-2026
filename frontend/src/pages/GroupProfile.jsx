@@ -96,28 +96,41 @@ function GroupProfile() {
         className="hero-banner"
         style={{ backgroundImage: bannerUrl ? `url(${bannerUrl})` : getBannerGradient(group.banner_preset) }}
       >
-        <div className="hero-content container">
-          {avatarUrl ? (
-            <img src={avatarUrl} alt="Group Avatar" className="profile-avatar" style={{ borderColor: themeHex }} />
-          ) : (
-            <div className="profile-avatar flex justify-center align-center" style={{ borderColor: themeHex, background: 'rgba(0,0,0,0.5)' }}>
-              {renderAvatar(group.avatar_preset)}
+        <div className="hero-banner-overlay"></div>
+      </div>
+      
+      <div className="hero-content container">
+        {avatarUrl ? (
+          <img src={avatarUrl} alt="Group Avatar" className="profile-avatar" style={{ borderColor: `var(--primary-theme-color, var(--bg))` }} />
+        ) : (
+          <div className="profile-avatar flex justify-center align-center" style={{ borderColor: `var(--primary-theme-color, var(--bg))` }}>
+            {renderAvatar(group.avatar_preset)}
+          </div>
+        )}
+        
+        <div className="hero-text">
+          <h1>{group.name}</h1>
+          {group.arif_details && (
+            <div className="arif-name">
+              <Flag size={18} />
+              Led by {group.arif_details.first_name || group.arif_details.username}
             </div>
           )}
-          
-          <div className="hero-text">
-            <h1>{group.name}</h1>
-            {group.arif_details && (
-              <div className="arif-name">
-                <Flag size={18} />
-                Led by {group.arif_details.first_name || group.arif_details.username}
-              </div>
-            )}
-          </div>
         </div>
       </div>
 
       <div className="container profile-body">
+        <div className="glass-card mb-8">
+          <h3>Patrol XP & Level</h3>
+          <div className="flex justify-between text-sm mb-2 font-bold">
+            <span style={{ color: `var(--primary-theme-color, var(--primary))` }}>Level {group.level || 1}</span>
+            <span className="text-muted">{(group.total_xp || 0) % 1000} / 1000 XP</span>
+          </div>
+          <div className="xp-bar-container" style={{ height: '0.75rem', background: 'var(--code-bg)', borderRadius: '999px', overflow: 'hidden' }}>
+            <div className="xp-bar-fill" style={{ width: `${((group.total_xp || 0) % 1000) / 10}%`, height: '100%', background: `var(--primary-theme-color, var(--primary))`, transition: 'width 1s ease-out' }}></div>
+          </div>
+        </div>
+
         {group.description && (
           <div className="glass-card mb-8">
             <h3 className="mb-2">Patrol Legend</h3>
@@ -129,26 +142,23 @@ function GroupProfile() {
           <h3>Achievements & Badges</h3>
           <p className="text-muted text-sm mt-1">Unlock these badges through camp activities!</p>
           <div className="badges-grid">
-            <div className="badge-item badge-fire">
-              <div className="badge-icon-wrapper"><Flame size={32} /></div>
-              <span className="badge-title">First Campfire</span>
-            </div>
-            <div className="badge-item badge-knot">
-              <div className="badge-icon-wrapper"><Activity size={32} /></div>
-              <span className="badge-title">Knot Master</span>
-            </div>
-            <div className="badge-item badge-compass">
-              <div className="badge-icon-wrapper"><Compass size={32} /></div>
-              <span className="badge-title">Pathfinder</span>
-            </div>
-            <div className="badge-item badge-tent">
-              <div className="badge-icon-wrapper"><Tent size={32} /></div>
-              <span className="badge-title">Survivalist</span>
-            </div>
-            <div className="badge-item badge-star">
-              <div className="badge-icon-wrapper"><Star size={32} /></div>
-              <span className="badge-title">Star Patrol</span>
-            </div>
+            {[
+              { id: 1, name: 'First Campfire', icon: Flame, colorClass: 'badge-fire' },
+              { id: 2, name: 'Knot Master', icon: Activity, colorClass: 'badge-knot' },
+              { id: 3, name: 'Pathfinder', icon: Compass, colorClass: 'badge-compass' },
+              { id: 4, name: 'Survivalist', icon: Tent, colorClass: 'badge-tent' },
+              { id: 5, name: 'Star Patrol', icon: Star, colorClass: 'badge-star' }
+            ].map(badge => {
+              const isUnlocked = group.earned_badges?.some(eb => eb.badge.name === badge.name);
+              const Icon = badge.icon;
+              return (
+                <div key={badge.id} className={`badge-item ${badge.colorClass}`} style={{ filter: isUnlocked ? 'none' : 'grayscale(100%) opacity(0.5)' }}>
+                  <div className="badge-icon-wrapper"><Icon size={32} /></div>
+                  <span className="badge-title">{badge.name}</span>
+                  {!isUnlocked && <div style={{ position: 'absolute', top: '10px', right: '10px' }}>🔒</div>}
+                </div>
+              );
+            })}
           </div>
         </div>
 
