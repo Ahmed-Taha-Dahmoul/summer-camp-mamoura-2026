@@ -52,6 +52,8 @@ services:
     volumes:
       - ./data/certbot/conf:/etc/letsencrypt
       - ./data/certbot/www:/var/www/certbot
+      - static_volume:/usr/share/nginx/staticfiles
+      - media_volume:/usr/share/nginx/media
     depends_on:
       - backend
     environment:
