@@ -61,7 +61,8 @@ class Game(models.Model):
     name = models.CharField(max_length=100)
     order = models.IntegerField(default=0, help_text="Order in the leaderboard columns")
     is_daily_instantane = models.BooleanField(default=False, help_text="If checked, this game automatically calculates daily Instantane reaction winners.")
-    instantane_start_date = models.DateField(null=True, blank=True)
+    is_wheel_spinner = models.BooleanField(default=False, help_text="If checked, this game automatically tallies points won from the Wheel Spin.")
+    active_since = models.DateTimeField(null=True, blank=True, help_text="Exact time this game was enabled.")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -72,10 +73,10 @@ class Game(models.Model):
         
     def save(self, *args, **kwargs):
         from django.utils import timezone
-        if self.is_daily_instantane and not self.instantane_start_date:
-            self.instantane_start_date = timezone.now().date()
-        elif not self.is_daily_instantane:
-            self.instantane_start_date = None
+        if (self.is_daily_instantane or self.is_wheel_spinner) and not self.active_since:
+            self.active_since = timezone.now()
+        elif not self.is_daily_instantane and not self.is_wheel_spinner:
+            self.active_since = None
         super().save(*args, **kwargs)
 
 class GameScore(models.Model):

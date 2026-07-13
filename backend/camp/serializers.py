@@ -25,7 +25,7 @@ class EarnedBadgeSerializer(serializers.ModelSerializer):
 class ScoutGroupSerializer(serializers.ModelSerializer):
     leader_name = serializers.ReadOnlyField(source='leader.username')
     members = ScoutProfileSerializer(many=True, read_only=True)
-    arif_details = UserSerializer(source='leader', read_only=True)
+    amiid_details = UserSerializer(source='leader', read_only=True)
     total_xp = serializers.ReadOnlyField()
     level = serializers.ReadOnlyField()
     earned_badges = EarnedBadgeSerializer(many=True, read_only=True)

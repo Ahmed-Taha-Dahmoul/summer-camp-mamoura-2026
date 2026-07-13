@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { MessageSquare, Image as ImageIcon, Send, X, Flag, Star } from 'lucide-react';
+import { MessageSquare, Image as ImageIcon, Send, X, Flag, Star, Bird, Moon, Mountain, Sun, Compass, Tent, Heart, Smile } from 'lucide-react';
 import './Forum.css';
 
 function Forum({ hideHeader = false }) {
@@ -10,8 +11,9 @@ function Forum({ hideHeader = false }) {
   const [postImage, setPostImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [reactorsModal, setReactorsModal] = useState({ isOpen: false, reactors: [], type: '' });
   
-  const [showComments, setShowComments] = useState({});
+
   const [commentInputs, setCommentInputs] = useState({});
   
   const fileInputRef = useRef(null);
@@ -75,9 +77,7 @@ function Forum({ hideHeader = false }) {
     }
   };
 
-  const toggleComments = (postId) => {
-    setShowComments(prev => ({ ...prev, [postId]: !prev[postId] }));
-  };
+
 
   const handleCommentSubmit = async (postId) => {
     const content = commentInputs[postId];
@@ -92,12 +92,55 @@ function Forum({ hideHeader = false }) {
     }
   };
 
+  const handleReact = async (postId, type) => {
+    try {
+      await api.post(`forum/posts/${postId}/react/`, { type });
+      fetchPosts();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const getLocalUrl = (url) => {
     if (!url) return '';
     try {
       return new URL(url).pathname;
     } catch {
       return url.replace(/^https?:\/\/[^\/]+/, '');
+    }
+  };
+
+  const getBannerGradient = (preset) => {
+    switch(preset) {
+      case 'forest': return 'linear-gradient(135deg, #064e3b, #10b981)';
+      case 'mountain': return 'linear-gradient(135deg, #1e293b, #94a3b8)';
+      case 'space': return 'linear-gradient(135deg, #0f172a, #8b5cf6)';
+      case 'fire': return 'linear-gradient(135deg, #7f1d1d, #f59e0b)';
+      default: return 'linear-gradient(135deg, #1e293b, #3b82f6)';
+    }
+  };
+
+  const getThemeColor = (colorId) => {
+    switch(colorId) {
+      case 'red': return '#ef4444';
+      case 'green': return '#10b981';
+      case 'purple': return '#a855f7';
+      case 'gold': return '#f59e0b';
+      case 'blue':
+      default: return '#3b82f6';
+    }
+  };
+
+  const renderPatrolAvatar = (preset, color) => {
+    const size = 22;
+    switch(preset) {
+      case 'eagle': return <Bird size={size} color={color} />;
+      case 'wolf': return <Moon size={size} color={color} />;
+      case 'bear': return <Mountain size={size} color={color} />;
+      case 'lion': return <Sun size={size} color={color} />;
+      case 'compass': return <Compass size={size} color={color} />;
+      case 'tent': 
+      default: return <Tent size={size} color={color} />;
     }
   };
 
@@ -198,18 +241,70 @@ function Forum({ hideHeader = false }) {
             )}
 
             {/* Footer / Interaction Bar */}
-            <div className="post-footer px-4 md-px-6 py-3 bg-black-20 flex align-center">
-              <button 
-                className="btn-icon flex align-center gap-2 text-muted font-bold hover-primary"
-                onClick={() => toggleComments(post.id)}
-              >
-                <MessageSquare size={18} /> {post.comments?.length || 0} Comments
-              </button>
+            <div className="post-footer px-4 md-px-6 py-3 bg-black-20 flex align-center justify-between">
+              <div className="flex align-center gap-2">
+                <div className="reaction-group flex align-center gap-1 mr-4">
+                  <div className="reaction-container">
+                    <button 
+                      className={`reaction-btn-main ${
+                        post.reactions?.user_reaction_type === 'HEART' ? 'reacted-heart' : 
+                        post.reactions?.user_reaction_type === 'LAUGH' ? 'reacted-laugh' : ''
+                      }`}
+                      onClick={() => handleReact(post.id, post.reactions?.user_reaction_type ? post.reactions.user_reaction_type : 'HEART')}
+                    >
+                      {post.reactions?.user_reaction_type === 'LAUGH' ? (
+                        <Smile size={20} />
+                      ) : (
+                        <Heart size={20} fill={post.reactions?.user_reaction_type === 'HEART' ? 'currentColor' : 'none'} />
+                      )}
+                      <span>React</span>
+                    </button>
+
+                    <div className="reaction-popover">
+                      <div 
+                        className="reaction-icon-wrapper"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleReact(post.id, 'HEART');
+                        }}
+                      >
+                        <span className="reaction-icon-label">Love</span>
+                        <Heart size={24} className="reaction-icon-heart" fill="currentColor" />
+                      </div>
+                      <div 
+                        className="reaction-icon-wrapper"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleReact(post.id, 'LAUGH');
+                        }}
+                      >
+                        <span className="reaction-icon-label">Haha</span>
+                        <Smile size={24} className="reaction-icon-laugh" />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {post.reactions?.count > 0 && (
+                    <span 
+                      className="reaction-count text-sm text-muted hover-primary ml-1"
+                      onClick={() => setReactorsModal({ isOpen: true, reactors: post.reactions.reactors, type: 'All' })}
+                    >
+                      {post.reactions.count}
+                    </span>
+                  )}
+                </div>
+
+                <button 
+                  className="btn-icon flex align-center gap-2 text-muted font-bold hover-primary"
+                  onClick={() => document.getElementById(`comment-input-${post.id}`)?.focus()}
+                >
+                  <MessageSquare size={18} /> {post.comments?.length || 0} Comments
+                </button>
+              </div>
             </div>
 
             {/* Comments Section */}
-            {showComments[post.id] && (
-              <div className="comments-section bg-black-40 p-4 md-p-6">
+            <div className="comments-section p-4 md-p-6" style={{ backgroundColor: '#f8fafc', borderTop: '1px solid #e2e8f0', borderBottomLeftRadius: '16px', borderBottomRightRadius: '16px' }}>
                 <div className="comments-list flex-column gap-4 mb-4">
                   {post.comments?.map(comment => (
                     <div key={comment.id} className="comment flex gap-3">
@@ -224,7 +319,7 @@ function Forum({ hideHeader = false }) {
                           <span className="avatar-initial small">{comment.author_name.charAt(0).toUpperCase()}</span>
                         )}
                       </div>
-                      <div className="comment-body bg-subtle-50">
+                      <div className="comment-body" style={{ backgroundColor: '#f1f5f9', borderRadius: '18px', padding: '10px 14px', color: '#1e293b' }}>
                         <div className="flex justify-between align-center mb-1">
                           <span 
                             className="font-bold text-sm text-primary hover-primary"
@@ -233,20 +328,21 @@ function Forum({ hideHeader = false }) {
                           >
                             {comment.author_name}
                           </span>
-                          <span className="text-xs text-muted">{new Date(comment.created_at).toLocaleDateString()}</span>
+                          <span className="text-xs" style={{ color: '#64748b' }}>{new Date(comment.created_at).toLocaleDateString()}</span>
                         </div>
                         <p className="text-sm m-0">{comment.content}</p>
                       </div>
                     </div>
                   ))}
                   {(!post.comments || post.comments.length === 0) && (
-                    <p className="text-sm text-muted italic text-center py-2 m-0">No comments yet. Be the first!</p>
+                    <p className="text-sm italic text-center py-2 m-0" style={{ color: '#94a3b8' }}>No comments yet. Be the first!</p>
                   )}
                 </div>
                 
                 {/* Add Comment Input */}
                 <div className="add-comment flex gap-2 align-center mt-2">
                   <input 
+                    id={`comment-input-${post.id}`}
                     type="text" 
                     placeholder="Write a reply..." 
                     className="comment-input"
@@ -263,8 +359,7 @@ function Forum({ hideHeader = false }) {
                   </button>
                 </div>
               </div>
-            )}
-          </div>
+              </div>
         ))}
         {posts.length === 0 && (
           <div className="text-center p-8 glass border-radius">
@@ -274,46 +369,133 @@ function Forum({ hideHeader = false }) {
       </section>
 
       {/* User Profile Popup Modal */}
-      {selectedUser && (
+      {selectedUser && createPortal(
         <div className="user-profile-modal-overlay" onClick={() => setSelectedUser(null)}>
-          <div className="user-profile-modal-card glass-card animate-fade-in" onClick={(e) => e.stopPropagation()}>
-            <button 
-              onClick={() => setSelectedUser(null)}
-              style={{ position: 'absolute', top: '15px', right: '15px', background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
-            >
-              <X size={24} />
+          <div 
+            className="user-profile-modal-card animate-fade-in" 
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div 
+              className="profile-modal-glow"
+              style={{ background: `radial-gradient(circle at top, ${getThemeColor(selectedUser.author_patrol_theme_color)}66 0%, transparent 80%)` }}
+            ></div>
+            
+            <button className="profile-modal-close" onClick={() => setSelectedUser(null)}>
+              <X size={20} />
             </button>
             
-            <div className="mx-auto mb-4" style={{ width: '90px', height: '90px', borderRadius: '50%', overflow: 'hidden', border: '3px solid var(--primary)', backgroundColor: 'var(--bg)', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0 auto', boxShadow: '0 8px 16px rgba(0,0,0,0.3)' }}>
+            <div 
+              className="profile-modal-avatar"
+              style={{ borderColor: '#ffffff' }}
+            >
               {selectedUser.author_profile_picture ? (
-                <img src={getLocalUrl(selectedUser.author_profile_picture)} alt={selectedUser.author_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <img src={getLocalUrl(selectedUser.author_profile_picture)} alt={selectedUser.author_name} />
               ) : (
-                <span style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'var(--text)' }}>{selectedUser.author_name.charAt(0).toUpperCase()}</span>
+                <span>{selectedUser.author_name.charAt(0).toUpperCase()}</span>
               )}
             </div>
             
-            <h2 style={{ color: 'var(--text-h)', margin: '0 0 0.25rem 0', fontSize: '1.5rem', fontWeight: 'bold' }}>{selectedUser.author_full_name}</h2>
-            <p className="text-muted" style={{ margin: '0 0 1.5rem 0', fontSize: '0.9rem' }}>@{selectedUser.author_name}</p>
-            
-            <div className="flex flex-col gap-3" style={{ textAlign: 'left', background: 'var(--bg)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border)' }}>
-              <div className="flex items-center gap-3">
-                <div style={{ background: 'rgba(59, 130, 246, 0.15)', padding: '8px', borderRadius: '10px', color: '#3b82f6', display: 'flex' }}><Flag size={18} /></div>
-                <div>
-                  <div className="text-xs text-muted font-bold text-uppercase" style={{ letterSpacing: '0.5px' }}>Patrol</div>
-                  <div className="font-bold text-sm" style={{ color: 'var(--text-h)' }}>{selectedUser.author_patrol_name}</div>
+            <div className="profile-modal-info">
+              <h2 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                {selectedUser.author_full_name}
+                {selectedUser.author_patrol_theme_color === 'gold' && <Star size={20} color="#f59e0b" fill="#f59e0b" style={{ flexShrink: 0 }} />}
+              </h2>
+              <p className="username-text" style={{ color: getThemeColor(selectedUser.author_patrol_theme_color) }}>
+                @{selectedUser.author_name}
+              </p>
+              
+              <div className="profile-modal-badges">
+                <div className="badge-row">
+                  <div 
+                    className="badge-icon" 
+                    style={{ 
+                      backgroundColor: `${getThemeColor(selectedUser.author_patrol_theme_color)}22`, 
+                      color: getThemeColor(selectedUser.author_patrol_theme_color) 
+                    }}
+                  >
+                    <Star size={20} />
+                  </div>
+                  <div className="badge-text">
+                    <span className="badge-label">Role</span>
+                    <span className="badge-value">{selectedUser.author_role}</span>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div style={{ background: 'rgba(234, 179, 8, 0.15)', padding: '8px', borderRadius: '10px', color: '#eab308', display: 'flex' }}><Star size={18} /></div>
-                <div>
-                  <div className="text-xs text-muted font-bold text-uppercase" style={{ letterSpacing: '0.5px' }}>Role</div>
-                  <div className="font-bold text-sm" style={{ color: 'var(--text-h)' }}>{selectedUser.author_role}</div>
+                
+                <div className="badge-row">
+                  <div 
+                    className="badge-icon" 
+                    style={{ 
+                      backgroundColor: `${getThemeColor(selectedUser.author_patrol_theme_color)}22`
+                    }}
+                  >
+                    {renderPatrolAvatar(selectedUser.author_patrol_avatar_preset, getThemeColor(selectedUser.author_patrol_theme_color))}
+                  </div>
+                  <div className="badge-text">
+                    <span className="badge-label">Taliaa (طليعة)</span>
+                    <span 
+                      className="badge-value"
+                      style={{ color: getThemeColor(selectedUser.author_patrol_theme_color) }}
+                    >
+                      {selectedUser.author_patrol_name}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
             
           </div>
-        </div>
+        </div>,
+        document.body
+      )}
+
+      {reactorsModal.isOpen && createPortal(
+        <div className="reactions-modal-overlay animate-fade-in" onClick={() => setReactorsModal({ isOpen: false, reactors: [], type: '' })}>
+          <div className="reactions-modal-content animate-slide-up" onClick={e => e.stopPropagation()}>
+            <div className="reactions-modal-header">
+              <h3 className="m-0 font-bold flex align-center gap-2">
+                Reactions
+                <span className="badge badge-primary">{reactorsModal.reactors.length}</span>
+              </h3>
+              <button className="reactions-modal-close" onClick={() => setReactorsModal({ isOpen: false, reactors: [], type: '' })}>
+                <X size={18} />
+              </button>
+            </div>
+            
+            <div className="modal-body p-0" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+              <div className="reactors-list">
+                {reactorsModal.reactors.map(reactor => (
+                  <div key={reactor.id} className="reactor-item-white flex align-center gap-3">
+                    <div className="avatar avatar-round bg-subtle relative flex-shrink-0" style={{ backgroundColor: '#f1f5f9' }}>
+                      {reactor.profile_picture ? (
+                        <img src={getLocalUrl(reactor.profile_picture)} alt="" className="avatar-img" />
+                      ) : (
+                        <span className="avatar-initial" style={{ color: '#64748b' }}>{reactor.name.charAt(0).toUpperCase()}</span>
+                      )}
+                    </div>
+                    <div className="reactor-info-white flex-grow">
+                      <h5 className="m-0 font-bold text-md">{reactor.name}</h5>
+                      <span className="text-sm">@{reactor.username}</span>
+                    </div>
+                    <div className="reaction-icon-right flex-shrink-0 flex align-center justify-center p-2 rounded-full" style={{ backgroundColor: reactor.type === 'HEART' ? 'rgba(236, 72, 153, 0.1)' : 'rgba(234, 179, 8, 0.1)' }}>
+                      {reactor.type === 'HEART' ? (
+                        <Heart size={20} className="text-pink-500" fill="currentColor" />
+                      ) : (
+                        <Smile size={20} className="text-yellow-500" />
+                      )}
+                    </div>
+                  </div>
+                ))}
+                
+                {reactorsModal.reactors.length === 0 && (
+                  <div className="p-8 text-center text-muted italic">
+                    No reactions yet.
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
 
     </div>

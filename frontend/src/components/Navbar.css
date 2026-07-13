@@ -175,12 +175,7 @@
     z-index: 1000;
   }
 
-  @media (prefers-color-scheme: dark) {
-    .nav-links {
-      background: var(--bg, #16171d);
-      box-shadow: -5px 0 30px rgba(0, 0, 0, 0.5);
-    }
-  }
+
 
   .nav-links.open {
     right: 0;

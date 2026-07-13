@@ -9,11 +9,16 @@ def generate_admin_code():
 class User(AbstractUser):
     ROLE_CHOICES = (
         ('LEADER', 'Scout Leader'),
-        ('ARIF', 'Arif (Small Group Leader)'),
+        ('AMIID', 'Amiid / Amiida (Small Group Leader)'),
         ('SCOUT', 'Scout Member'),
         ('ADMIN', 'Admin'),
     )
+    GENDER_CHOICES = (
+        ('BOY', 'Boy Scout'),
+        ('GIRL', 'Girl Scout'),
+    )
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='SCOUT')
+    gender = models.CharField(max_length=10, choices=GENDER_CHOICES, default='BOY')
     phone_number = models.CharField(max_length=20, null=True, blank=True)
     profile_picture = models.ImageField(upload_to='user_profiles/', null=True, blank=True)
     bio = models.TextField(null=True, blank=True)
@@ -25,10 +30,11 @@ class User(AbstractUser):
 class AdminInviteCode(models.Model):
     ROLE_CHOICES = (
         ('LEADER', 'Scout Leader'),
-        ('ARIF', 'Arif'),
+        ('AMIID', 'Amiid / Amiida'),
     )
     code = models.CharField(max_length=12, unique=True, default=generate_admin_code)
-    role_type = models.CharField(max_length=10, choices=ROLE_CHOICES, default='ARIF')
+    role_type = models.CharField(max_length=10, choices=ROLE_CHOICES, default='AMIID')
+    gender = models.CharField(max_length=10, choices=User.GENDER_CHOICES, default='BOY')
     is_used = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 

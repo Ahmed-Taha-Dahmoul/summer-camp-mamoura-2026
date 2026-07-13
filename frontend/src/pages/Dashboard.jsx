@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { ChefHat, PenTool, Music, User as UserIcon, Star, Flag, Palette, Image as ImageIcon, Monitor, UploadCloud, Save, Bird, Moon, Mountain, Sun, Compass, Tent } from 'lucide-react';
+import { ChefHat, PenTool, Music, User as UserIcon, Star, Flag, Palette, Image as ImageIcon, Monitor, UploadCloud, Save, Bird, Moon, Mountain, Sun, Compass, Tent, UserPlus, Shield, Award, Zap, Gamepad2, ChevronRight, X } from 'lucide-react';
+import MarioPartyTimeline from './MarioPartyTimeline';
 import './Dashboard.css';
 
 const ROLE_LABELS = {
@@ -18,7 +19,7 @@ const RoleIcon = ({ role }) => {
     case 'WRITER': return <PenTool size={16} className="role-icon writer-icon" />;
     case 'SINGER': return <Music size={16} className="role-icon singer-icon" />;
     case 'SECOND_LEADER': return <Star size={16} className="role-icon leader-icon" />;
-    case 'ARIF': return <Flag size={16} className="role-icon" style={{ color: '#eab308' }} />;
+    case 'AMIID': return <Flag size={16} className="role-icon" style={{ color: '#eab308' }} />;
     default: return <UserIcon size={16} className="role-icon member-icon" />;
   }
 };
@@ -83,14 +84,14 @@ function Dashboard({ hideHeader = false }) {
       setGroups(groupsRes.data);
       
       let userGroup = null;
-      if (profileRes.data.role === 'ARIF') {
+      if (profileRes.data.role === 'AMIID') {
         userGroup = groupsRes.data.find(g => g.leader === profileRes.data.id);
       } else {
         userGroup = groupsRes.data.find(g => g.members && g.members.some(m => m.user.id === profileRes.data.id));
       }
       setMyGroup(userGroup);
 
-      if (userGroup && profileRes.data.role === 'ARIF') {
+      if (userGroup && profileRes.data.role === 'AMIID') {
         const codesRes = await api.get('camp/invite-codes/');
         setInviteCodes(codesRes.data);
         setEditDesc(userGroup.description || '');
@@ -194,30 +195,36 @@ function Dashboard({ hideHeader = false }) {
       )}
 
       {profile.role === 'LEADER' && (
-        <section className="leader-dashboard glass p-6 border-radius mt-8">
-          <h2>Scout Leader Dashboard</h2>
-          <p className="text-muted mt-2">Welcome, Qaid! Administrative features will be available here soon.</p>
-        </section>
+        <>
+          <section className="leader-dashboard glass p-6 border-radius mt-8">
+            <h2>Scout Leader Dashboard</h2>
+            <p className="text-muted mt-2">Welcome, Qaid! Administrative features will be available here soon.</p>
+          </section>
+          
+          <div className="mt-8">
+            <MarioPartyTimeline />
+          </div>
+        </>
       )}
 
-      {profile.role === 'ARIF' && !myGroup && (
+      {profile.role === 'AMIID' && !myGroup && (
         <section className="create-group-section glass p-6 border-radius mt-8">
-          <h2>Create Your Patrol</h2>
+          <h2>Create Your Taliaa (طليعة)</h2>
           <form onSubmit={handleCreateGroup} className="flex gap-4 mt-4">
             <input 
               type="text" 
-              placeholder="Patrol Name (e.g. Eagles)" 
+              placeholder="Taliaa Name (e.g. Eagles)" 
               value={newGroupName}
               onChange={(e) => setNewGroupName(e.target.value)}
               required
               className="p-2 border border-gray-300 rounded"
             />
-            <button type="submit" className="btn btn-primary">Create Patrol</button>
+            <button type="submit" className="btn btn-primary">Create Taliaa (طليعة)</button>
           </form>
         </section>
       )}
 
-      {profile.role === 'ARIF' && myGroup && (
+      {profile.role === 'AMIID' && myGroup && (
         <section className="manage-group-section mt-8">
           <div className="flex justify-between align-center mb-4">
             <h2>Manage Group: <span className="text-primary">{myGroup.name}</span></h2>
@@ -236,7 +243,7 @@ function Dashboard({ hideHeader = false }) {
               onClick={() => setActiveTab('members')}
               style={{ background: 'transparent' }}
             >
-              Patrol Roster
+              Taliaa (طليعة) Roster
             </button>
             <button 
               className={`pb-2 px-4 font-bold text-lg ${activeTab === 'codes' ? 'text-primary border-b-2 border-primary' : 'text-muted'}`}
@@ -258,7 +265,7 @@ function Dashboard({ hideHeader = false }) {
             <div className="glass p-6 border-radius mb-8 animate-fade-in" style={{ borderTop: `4px solid var(--theme-${themeColor}, var(--primary))` }}>
               <div className="flex align-center gap-3 mb-2">
                 <Palette className="text-primary" size={24} />
-                <h3 className="m-0 text-2xl">Advanced Patrol Customization</h3>
+                <h3 className="m-0 text-2xl">Advanced Taliaa (طليعة) Customization</h3>
               </div>
               <p className="text-muted text-sm mb-6">Build your Steam-like public profile. Choose a theme color, preset assets, or upload your own to stand out!</p>
               <div className="grid grid-cols-3 gap-8">
@@ -310,7 +317,7 @@ function Dashboard({ hideHeader = false }) {
                       <div className="customization-card flex flex-col">
                         <div className="flex align-center gap-2 mb-4">
                           <UserIcon size={18} className="text-muted" />
-                          <label className="font-bold m-0 text-lg">Patrol Avatar</label>
+                          <label className="font-bold m-0 text-lg">Taliaa (طليعة) Avatar</label>
                         </div>
                         
                         <div className="flex-col gap-4 flex" style={{ flex: 1 }}>
@@ -383,7 +390,7 @@ function Dashboard({ hideHeader = false }) {
                     <div className="customization-card">
                       <div className="flex align-center gap-2 mb-4">
                         <PenTool size={18} className="text-muted" />
-                        <label className="font-bold m-0 text-lg">Patrol Legend</label>
+                        <label className="font-bold m-0 text-lg">Taliaa (طليعة) Legend</label>
                       </div>
                       <textarea 
                         value={editDesc} 
@@ -391,7 +398,7 @@ function Dashboard({ hideHeader = false }) {
                         className="premium-textarea"
                         rows={4}
                         style={{ resize: 'vertical' }}
-                        placeholder="Tell the grand story of your patrol... Who are you? What is your motto?"
+                        placeholder="Tell the grand story of your taliaa... Who are you? What is your motto?"
                       />
                     </div>
                     
@@ -430,7 +437,7 @@ function Dashboard({ hideHeader = false }) {
                       
                       <div className="mt-4">
                         <h3 className="m-0 text-2xl font-bold flex align-center gap-2" style={{ color: 'var(--text-h)', wordBreak: 'break-word' }}>
-                          {myGroup?.group_name || 'My Awesome Patrol'}
+                          {myGroup?.group_name || 'My Awesome Taliaa (طليعة)'}
                           {themeColor === 'gold' && <Star size={20} color="#eab308" style={{ flexShrink: 0 }} />}
                         </h3>
                         <div className="flex flex-wrap gap-2 mt-2 mb-4">
@@ -438,13 +445,13 @@ function Dashboard({ hideHeader = false }) {
                            <span className="member-badge" style={{ color: `var(--theme-${themeColor}, var(--primary))` }}>{myGroup?.users?.length || 1} Member{myGroup?.users?.length !== 1 ? 's' : ''}</span>
                         </div>
                         <p className="text-sm" style={{ color: 'var(--text)', fontStyle: 'italic', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                          "{editDesc || 'Tell the grand story of your patrol... Who are you? What is your motto?'}"
+                          "{editDesc || 'Tell the grand story of your taliaa... Who are you? What is your motto?'}"
                         </p>
                       </div>
                       
                       <div className="mt-4 pt-4 border-t" style={{ borderTopColor: 'var(--border)' }}>
                         <div className="flex justify-between text-xs mb-1 font-bold">
-                          <span style={{ color: `var(--theme-${themeColor}, var(--primary))` }}>Patrol XP</span>
+                          <span style={{ color: `var(--theme-${themeColor}, var(--primary))` }}>Taliaa (طليعة) XP</span>
                           <span className="text-muted">{(myGroup?.total_xp || 0) % 1000} / 1000 XP</span>
                         </div>
                         <div className="xp-bar-container">
@@ -495,29 +502,31 @@ function Dashboard({ hideHeader = false }) {
           {activeTab === 'members' && (
             <div className="glass p-6 border-radius animate-fade-in">
               <div className="members-list">
-                <h3>Patrol Members</h3>
+                <h3>Taliaa (طليعة) Members</h3>
                 <div className="grid grid-cols-2 gap-4 mt-4">
                   
-                  {/* Render Arif (Group Creator) */}
-                  {myGroup.arif_details && (
+                  {/* Render Amiid (Group Creator) */}
+                  {myGroup.amiid_details && (
                     <div className="glass p-4 flex flex-col justify-between border-radius gap-4" style={{ borderColor: '#eab308', borderWidth: '2px' }}>
                       <div className="flex justify-between align-center">
                         <div className="flex align-center gap-3">
                           <div style={{ width: '40px', height: '40px', borderRadius: '50%', overflow: 'hidden', backgroundColor: 'rgba(234, 179, 8, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#eab308' }}>
-                             {myGroup.arif_details.profile_picture ? (
-                                <img src={myGroup.arif_details.profile_picture.replace(/^https?:\/\/[^\/]+/, '')} alt="..." style={{width:'100%', height:'100%', objectFit:'cover'}} />
+                             {myGroup.amiid_details.profile_picture ? (
+                                <img src={myGroup.amiid_details.profile_picture.replace(/^https?:\/\/[^\/]+/, '')} alt="..." style={{width:'100%', height:'100%', objectFit:'cover'}} />
                              ) : (
-                                <span className="font-bold text-lg">{myGroup.arif_details.first_name?.[0] || myGroup.arif_details.username[0]}</span>
+                                <span className="font-bold text-lg">{myGroup.amiid_details.first_name?.[0] || myGroup.amiid_details.username[0]}</span>
                              )}
                           </div>
                           <div>
-                            <p className="font-bold">{myGroup.arif_details.first_name || myGroup.arif_details.username} {myGroup.arif_details.last_name}</p>
-                            <p className="text-muted text-sm">@{myGroup.arif_details.username}</p>
+                            <p className="font-bold">{myGroup.amiid_details.first_name || myGroup.amiid_details.username} {myGroup.amiid_details.last_name}</p>
+                            <p className="text-muted text-sm">@{myGroup.amiid_details.username}</p>
                           </div>
                         </div>
                         <div className="role-display flex align-center gap-2">
-                          <RoleIcon role="ARIF" />
-                          <span className="text-sm font-bold" style={{ color: '#eab308' }}>عريف (Arif)</span>
+                          <RoleIcon role="AMIID" />
+                          <span className="text-sm font-bold" style={{ color: '#eab308' }}>
+                            {myGroup.amiid_details.gender === 'GIRL' ? 'عميدة (Amiida)' : 'عميد (Amiid)'}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -610,28 +619,30 @@ function Dashboard({ hideHeader = false }) {
               })()}
 
               <div className="members-list mt-8">
-                <h3>Patrol Members</h3>
+                <h3>Taliaa (طليعة) Members</h3>
                 <div className="grid grid-cols-2 gap-4 mt-4">
-                  {/* Render Arif (Group Creator) */}
-                  {myGroup.arif_details && (
+                  {/* Render Amiid (Group Creator) */}
+                  {myGroup.amiid_details && (
                     <div className="glass p-4 flex flex-col justify-between border-radius gap-4" style={{ borderColor: '#eab308', borderWidth: '2px' }}>
                       <div className="flex justify-between align-center">
                         <div className="flex align-center gap-3">
                           <div style={{ width: '40px', height: '40px', borderRadius: '50%', overflow: 'hidden', backgroundColor: 'rgba(234, 179, 8, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#eab308' }}>
-                             {myGroup.arif_details.profile_picture ? (
-                                <img src={myGroup.arif_details.profile_picture.replace(/^https?:\/\/[^\/]+/, '')} alt="..." style={{width:'100%', height:'100%', objectFit:'cover'}} />
+                             {myGroup.amiid_details.profile_picture ? (
+                                <img src={myGroup.amiid_details.profile_picture.replace(/^https?:\/\/[^\/]+/, '')} alt="..." style={{width:'100%', height:'100%', objectFit:'cover'}} />
                              ) : (
-                                <span className="font-bold text-lg">{myGroup.arif_details.first_name?.[0] || myGroup.arif_details.username[0]}</span>
+                                <span className="font-bold text-lg">{myGroup.amiid_details.first_name?.[0] || myGroup.amiid_details.username[0]}</span>
                              )}
                           </div>
                           <div>
-                            <p className="font-bold">{myGroup.arif_details.first_name || myGroup.arif_details.username} {myGroup.arif_details.last_name}</p>
-                            <p className="text-muted text-sm">@{myGroup.arif_details.username}</p>
+                            <p className="font-bold">{myGroup.amiid_details.first_name || myGroup.amiid_details.username} {myGroup.amiid_details.last_name}</p>
+                            <p className="text-muted text-sm">@{myGroup.amiid_details.username}</p>
                           </div>
                         </div>
                         <div className="role-display flex align-center gap-2">
-                          <RoleIcon role="ARIF" />
-                          <span className="text-sm font-bold" style={{ color: '#eab308' }}>عريف (Arif)</span>
+                          <RoleIcon role="AMIID" />
+                          <span className="text-sm font-bold" style={{ color: '#eab308' }}>
+                            {myGroup.amiid_details.gender === 'GIRL' ? 'عميدة (Amiida)' : 'عميد (Amiid)'}
+                          </span>
                         </div>
                       </div>
                     </div>

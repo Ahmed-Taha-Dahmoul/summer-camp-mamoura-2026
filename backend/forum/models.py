@@ -20,3 +20,19 @@ class Comment(models.Model):
 
     def __str__(self):
         return f"Comment by {self.author.username} on {self.post.id}"
+
+class ForumReaction(models.Model):
+    REACTION_CHOICES = (
+        ('HEART', 'Heart'),
+        ('LAUGH', 'Laugh'),
+    )
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='reactions')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='forum_reactions')
+    reaction_type = models.CharField(max_length=10, choices=REACTION_CHOICES, default='HEART')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('post', 'user')
+
+    def __str__(self):
+        return f"{self.user.username} reacted {self.reaction_type} to Post {self.post.id}"

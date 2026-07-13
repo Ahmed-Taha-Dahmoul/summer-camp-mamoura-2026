@@ -5,7 +5,7 @@ from .models import User, AdminInviteCode
 class CustomUserAdmin(UserAdmin):
     fieldsets = UserAdmin.fieldsets + (
         ('Scout App Profile', {
-            'fields': ('role', 'phone_number', 'profile_picture', 'bio'),
+            'fields': ('role', 'gender', 'phone_number', 'profile_picture', 'bio'),
         }),
         ('Scout Privileges & Moderation', {
             'fields': ('unlimited_instants', 'moderated_groups'),
@@ -14,5 +14,9 @@ class CustomUserAdmin(UserAdmin):
     )
     filter_horizontal = ('moderated_groups',)
 
+class AdminInviteCodeAdmin(admin.ModelAdmin):
+    list_display = ('code', 'role_type', 'gender', 'is_used', 'created_at')
+    list_filter = ('role_type', 'gender', 'is_used')
+
 admin.site.register(User, CustomUserAdmin)
-admin.site.register(AdminInviteCode)
+admin.site.register(AdminInviteCode, AdminInviteCodeAdmin)

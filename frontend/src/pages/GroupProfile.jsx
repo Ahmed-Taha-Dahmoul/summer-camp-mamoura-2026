@@ -18,7 +18,7 @@ const RoleIcon = ({ role, size = 16 }) => {
     case 'WRITER': return <PenTool size={size} />;
     case 'SINGER': return <Music size={size} />;
     case 'SECOND_LEADER': return <Star size={size} />;
-    case 'ARIF': return <Flag size={size} />;
+    case 'AMIID': return <Flag size={size} />;
     default: return <UserIcon size={size} />;
   }
 };
@@ -37,7 +37,7 @@ function GroupProfile() {
         });
         setGroup(response.data);
       } catch (err) {
-        setError('Failed to load patrol profile. It might not exist or you lack permissions.');
+        setError('Failed to load Taliaa (طليعة) profile. It might not exist or you lack permissions.');
       } finally {
         setLoading(false);
       }
@@ -45,7 +45,7 @@ function GroupProfile() {
     fetchGroup();
   }, [id]);
 
-  if (loading) return <div className="container mt-8 text-center">Loading Patrol Database...</div>;
+  if (loading) return <div className="container mt-8 text-center">Loading Taliaa (طليعة) Database...</div>;
   if (error) return <div className="container mt-8 text-center text-red-500">{error}</div>;
   if (!group) return null;
 
@@ -110,10 +110,10 @@ function GroupProfile() {
         
         <div className="hero-text">
           <h1>{group.name}</h1>
-          {group.arif_details && (
-            <div className="arif-name">
+          {group.amiid_details && (
+            <div className="amiid-name">
               <Flag size={18} />
-              Led by {group.arif_details.first_name || group.arif_details.username}
+              Led by {group.amiid_details.first_name || group.amiid_details.username}
             </div>
           )}
         </div>
@@ -121,7 +121,7 @@ function GroupProfile() {
 
       <div className="container profile-body">
         <div className="glass-card mb-8">
-          <h3>Patrol XP & Level</h3>
+          <h3>Taliaa (طليعة) XP & Level</h3>
           <div className="flex justify-between text-sm mb-2 font-bold">
             <span style={{ color: `var(--primary-theme-color, var(--primary))` }}>Level {group.level || 1}</span>
             <span className="text-muted">{(group.total_xp || 0) % 1000} / 1000 XP</span>
@@ -133,7 +133,7 @@ function GroupProfile() {
 
         {group.description && (
           <div className="glass-card mb-8">
-            <h3 className="mb-2">Patrol Legend</h3>
+            <h3 className="mb-2">Taliaa (طليعة) Legend</h3>
             <p className="text-muted leading-relaxed" style={{ whiteSpace: 'pre-line' }}>{group.description}</p>
           </div>
         )}
@@ -147,7 +147,7 @@ function GroupProfile() {
               { id: 2, name: 'Knot Master', icon: Activity, colorClass: 'badge-knot' },
               { id: 3, name: 'Pathfinder', icon: Compass, colorClass: 'badge-compass' },
               { id: 4, name: 'Survivalist', icon: Tent, colorClass: 'badge-tent' },
-              { id: 5, name: 'Star Patrol', icon: Star, colorClass: 'badge-star' }
+              { id: 5, name: 'Star Taliaa (طليعة)', icon: Star, colorClass: 'badge-star' }
             ].map(badge => {
               const isUnlocked = group.earned_badges?.some(eb => eb.badge.name === badge.name);
               const Icon = badge.icon;
@@ -163,25 +163,27 @@ function GroupProfile() {
         </div>
 
         <div className="glass-card">
-          <h3>Patrol Roster</h3>
+          <h3>Taliaa (طليعة) Roster</h3>
           <div className="roster-grid">
-            {/* Arif */}
-            {group.arif_details && (
+            {/* Amiid */}
+            {group.amiid_details && (
               <div className="roster-card" style={{ borderColor: 'rgba(234, 179, 8, 0.3)' }}>
                 <div className="roster-avatar" style={{ backgroundColor: 'rgba(234, 179, 8, 0.1)', color: '#eab308', overflow: 'hidden' }}>
-                  {group.arif_details.profile_picture ? (
+                  {group.amiid_details.profile_picture ? (
                     <img 
-                      src={group.arif_details.profile_picture.replace(/^https?:\/\/[^\/]+/, '')} 
-                      alt={group.arif_details.username} 
+                      src={group.amiid_details.profile_picture.replace(/^https?:\/\/[^\/]+/, '')} 
+                      alt={group.amiid_details.username} 
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
                     />
                   ) : (
-                    group.arif_details.first_name?.[0] || group.arif_details.username[0]
+                    group.amiid_details.first_name?.[0] || group.amiid_details.username[0]
                   )}
                 </div>
                 <div>
-                  <div className="font-bold">{group.arif_details.first_name || group.arif_details.username} {group.arif_details.last_name}</div>
-                  <div className="text-xs font-bold" style={{ color: '#eab308' }}>عريف (Arif)</div>
+                  <div className="font-bold">{group.amiid_details.first_name || group.amiid_details.username} {group.amiid_details.last_name}</div>
+                  <div className="text-xs font-bold" style={{ color: '#eab308' }}>
+                    {group.amiid_details.gender === 'GIRL' ? 'عميدة (Amiida)' : 'عميد (Amiid)'}
+                  </div>
                 </div>
               </div>
             )}

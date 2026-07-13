@@ -5,7 +5,7 @@ from camp.models import InviteCode, ScoutProfile
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'role', 'first_name', 'last_name', 'phone_number', 'profile_picture', 'bio')
+        fields = ('id', 'username', 'email', 'role', 'first_name', 'last_name', 'phone_number', 'profile_picture', 'bio', 'gender')
         read_only_fields = ('id', 'username', 'role')
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -29,19 +29,19 @@ class RegisterSerializer(serializers.ModelSerializer):
                 data['admin_invite_code_obj'] = code_obj
             except AdminInviteCode.DoesNotExist:
                 raise serializers.ValidationError({"invite_code": "Invalid or already used Leader invite code."})
-        elif role in ['SCOUT', 'ARIF']:
-            # Auto-detect if this is an ARIF code or a SCOUT code
+        elif role in ['SCOUT', 'AMIID']:
+            # Auto-detect if this is an AMIID code or a SCOUT code
             try:
-                code_obj = AdminInviteCode.objects.get(code=invite_code, role_type='ARIF', is_used=False)
+                code_obj = AdminInviteCode.objects.get(code=invite_code, role_type='AMIID', is_used=False)
                 data['admin_invite_code_obj'] = code_obj
-                data['role'] = 'ARIF'
+                data['role'] = 'AMIID'
             except AdminInviteCode.DoesNotExist:
                 try:
                     code_obj = InviteCode.objects.get(code=invite_code, is_used=False)
                     data['invite_code_obj'] = code_obj
                     data['role'] = 'SCOUT'
                 except InviteCode.DoesNotExist:
-                    raise serializers.ValidationError({"invite_code": "Invalid or already used Scout/Arif invite code."})
+                    raise serializers.ValidationError({"invite_code": "Invalid or already used Scout/Amiid invite code."})
         
         return data
 
@@ -59,10 +59,17 @@ class RegisterSerializer(serializers.ModelSerializer):
             last_name=validated_data.get('last_name', '')
         )
 
-        if user.role in ['LEADER', 'ARIF'] and admin_invite_code_obj:
+        if user.role in ['LEADER', 'AMIID'] and admin_invite_code_obj:
+            user.gender = admin_invite_code_obj.gender
+            user.save()
             admin_invite_code_obj.is_used = True
             admin_invite_code_obj.save()
         elif user.role == 'SCOUT' and invite_code_obj:
+            # Inherit gender from the group leader (Amiid)
+            if invite_code_obj.group and invite_code_obj.group.leader:
+                user.gender = invite_code_obj.group.leader.gender
+                user.save()
+            
             # Create profile and link group
             ScoutProfile.objects.create(user=user, scout_group=invite_code_obj.group)
             invite_code_obj.is_used = True

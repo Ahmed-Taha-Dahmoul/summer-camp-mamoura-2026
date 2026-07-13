@@ -57,7 +57,7 @@
   word-break: break-word;
 }
 
-.hero-text .arif-name {
+.hero-text .amiid-name {
   color: var(--primary-theme-color, var(--primary));
   font-weight: bold;
   font-size: 1.1rem;
@@ -189,7 +189,7 @@
   .hero-text h1 {
     font-size: 2rem;
   }
-  .hero-text .arif-name {
+  .hero-text .amiid-name {
     justify-content: center;
   }
   .profile-body {

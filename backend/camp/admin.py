@@ -10,8 +10,8 @@ class ScoutGroupAdmin(admin.ModelAdmin):
     inlines = [GameScoreInline]
 
 class GameAdmin(admin.ModelAdmin):
-    list_display = ('name', 'order', 'is_daily_instantane', 'instantane_start_date')
-    list_editable = ('order', 'is_daily_instantane')
+    list_display = ('name', 'order', 'is_daily_instantane', 'is_wheel_spinner', 'active_since')
+    list_editable = ('order', 'is_daily_instantane', 'is_wheel_spinner')
 
 admin.site.register(ScoutGroup, ScoutGroupAdmin)
 admin.site.register(ScoutProfile)

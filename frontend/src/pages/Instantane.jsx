@@ -98,7 +98,7 @@ function Instantane() {
     }
   };
 
-  const fetchInstantanes = async () => {
+  const fetchInstantanes = async (changeView = true) => {
     try {
       const res = await axios.get(`${API_URL}/api/instantane/`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -110,12 +110,14 @@ function Instantane() {
       setPosts(res.data.posts);
       setMyPost(res.data.my_post);
       
-      if (res.data.posts.length === 0) {
-        setViewMode('camera');
-        startCamera();
-      } else {
-        setViewMode('viewer');
-        stopCamera();
+      if (changeView) {
+        if (res.data.posts.length === 0) {
+          setViewMode('camera');
+          startCamera();
+        } else {
+          setViewMode('viewer');
+          stopCamera();
+        }
       }
       
       setLoading(false);
@@ -167,7 +169,7 @@ function Instantane() {
         headers: { Authorization: `Bearer ${token}` }
       });
       setModeratedPosts(moderatedPosts.filter(p => p.id !== id));
-      fetchInstantanes(); // Refresh main feed
+      fetchInstantanes(false); // Refresh main feed without changing view
     } catch (err) {
       console.error("Failed to delete post:", err);
     }
@@ -180,8 +182,8 @@ function Instantane() {
   }, [viewMode, stream, preview]);
 
   const handleCapture = () => {
-    if (!hasUnlimited && postsTodayCount >= 4) {
-      alert("You cannot take more than 4 Instants per day!");
+    if (!hasUnlimited && postsTodayCount >= 10) {
+      alert("You cannot take more than 10 Instants per day!");
       return;
     }
     
@@ -234,7 +236,7 @@ function Instantane() {
           'Content-Type': 'multipart/form-data'
         }
       });
-      fetchInstantanes(); // This will refresh the feed with the new post
+      fetchInstantanes(false); // This will refresh the feed with the new post but stay on camera
       setUploading(false);
       setCurrentIndex(0);
     } catch (err) {
@@ -275,6 +277,7 @@ function Instantane() {
         setViewMode('camera');
         startCamera();
         setCurrentIndex(0);
+        fetchInstantanes(false);
       }
     }
   };
@@ -318,14 +321,36 @@ function Instantane() {
           </button>
           <h2 className="camera-title">Nouvel instantané</h2>
           
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', height: '44px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            {posts.length > 0 && (
+              <button 
+                onClick={() => { stopCamera(); setViewMode('viewer'); }} 
+                style={{ 
+                  background: 'none', border: 'none', cursor: 'pointer', padding: '0', 
+                  width: '40px', height: '40px', borderRadius: '50%', overflow: 'hidden', 
+                  border: '2px solid var(--primary)', position: 'relative',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
+                }}
+                title="View Instants Feed"
+              >
+                <img 
+                  src={posts[currentIndex]?.image ? posts[currentIndex].image.replace(/^https?:\/\/[^\/]+/, '') : ''} 
+                  alt="Instants"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', filter: !hasPosted ? 'blur(4px)' : 'none' }}
+                />
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.1)' }}></div>
+                <div style={{ position: 'absolute', bottom: '-4px', right: '-4px', background: '#ef4444', color: 'white', fontSize: '0.65rem', fontWeight: 'bold', width: '20px', height: '20px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid rgba(22, 23, 29, 0.8)' }}>
+                  {posts.length - currentIndex}
+                </div>
+              </button>
+            )}
             <button onClick={() => { stopCamera(); openMyInstants(); }} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', padding: '0.5rem' }}>
               <Grid size={28} />
             </button>
             {hasModerationAccess && (
               <button 
                 className="moderation-btn"
-                style={{ position: 'absolute', top: '100%', marginTop: '0.5rem', background: 'rgba(239, 68, 68, 0.85)', border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer', width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', boxShadow: '0 4px 12px rgba(0,0,0,0.5)', zIndex: 110 }}
+                style={{ background: 'rgba(239, 68, 68, 0.85)', border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer', width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', boxShadow: '0 4px 12px rgba(0,0,0,0.5)' }}
                 onClick={() => { stopCamera(); openModeration(); }}
                 title="Moderation Dashboard"
               >
@@ -364,6 +389,9 @@ function Instantane() {
 
         {/* Bottom Controls */}
         <div className="camera-controls">
+          <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.9)', fontSize: '0.85rem', marginBottom: '1rem', textShadow: '0 1px 3px rgba(0,0,0,0.8)', fontWeight: 'bold' }}>
+            {hasUnlimited ? "Unlimited Instants" : `${Math.max(0, 10 - postsTodayCount)} / 10 Instants left`}
+          </div>
           <div className="camera-buttons-row">
             {!preview ? (
               <>
@@ -537,14 +565,21 @@ function Instantane() {
         </button>
         <h2 className="camera-title">Instantanés</h2>
         
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', height: '44px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <button 
+            onClick={() => { setViewMode('camera'); startCamera(); fetchInstantanes(false); }} 
+            style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', padding: '0.5rem' }}
+            title="Take Photo"
+          >
+            <Camera size={28} />
+          </button>
           <button onClick={() => { openMyInstants(); }} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', padding: '0.5rem' }}>
             <Grid size={28} />
           </button>
           {hasModerationAccess && (
             <button 
               className="moderation-btn"
-              style={{ position: 'absolute', top: '100%', marginTop: '0.5rem', background: 'rgba(239, 68, 68, 0.85)', border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer', width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', boxShadow: '0 4px 12px rgba(0,0,0,0.5)', zIndex: 110 }}
+              style={{ background: 'rgba(239, 68, 68, 0.85)', border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer', width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', boxShadow: '0 4px 12px rgba(0,0,0,0.5)' }}
               onClick={() => { openModeration(); }}
               title="Moderation Dashboard"
             >

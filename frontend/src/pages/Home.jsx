@@ -72,7 +72,7 @@ function Home() {
           <div className="container">
             <div className="quick-actions-bar">
               <Link to="/dashboard" className="quick-action-btn qa-green">
-                <Users size={18} /> <span>Manage Patrol</span>
+                <Users size={18} /> <span>Manage Taliaa (طليعة)</span>
               </Link>
               <Link to="/instantane" className="quick-action-btn qa-purple">
                 <Camera size={18} /> <span>Instantané</span>

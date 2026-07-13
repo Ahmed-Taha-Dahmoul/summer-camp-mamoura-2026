@@ -86,7 +86,7 @@ function Login() {
             className={`tab ${isLogin === 'register_scout' ? 'active' : ''}`} 
             onClick={() => setIsLogin('register_scout')}
           >
-            Register (Arif / Scout)
+            Register (Amiid (عميد) / Amiida (عميدة) / Scout)
           </button>
           <button 
             className={`tab ${isLogin === 'register_leader' ? 'active' : ''}`} 
@@ -124,7 +124,7 @@ function Login() {
           {isLogin !== 'login' && (
             <div className="form-group">
               <label>
-                {isLogin === 'register_scout' ? 'Arif / Scout Invite Code' : 'Leader Invite Code'}
+                {isLogin === 'register_scout' ? 'Amiid (عميد) / Amiida (عميدة) / Scout Invite Code' : 'Leader Invite Code'}
               </label>
               <input type="text" name="invite_code" value={formData.invite_code} onChange={handleChange} required />
             </div>
@@ -137,7 +137,7 @@ function Login() {
 
           <button type="submit" className="btn btn-primary w-full mt-4">
             {isLogin === 'login' ? 'Login' : 
-             isLogin === 'register_scout' ? 'Register (Arif / Scout)' : 'Register as Scout Leader'}
+             isLogin === 'register_scout' ? 'Register (Amiid (عميد) / Amiida (عميدة) / Scout)' : 'Register as Scout Leader'}
           </button>
         </form>
       </div>

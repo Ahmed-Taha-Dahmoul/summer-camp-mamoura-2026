@@ -44,8 +44,8 @@ class InstantaneListView(generics.ListCreateAPIView):
 
     def create(self, request, *args, **kwargs):
         today = timezone.now().date()
-        if not request.user.unlimited_instants and InstantanePost.objects.filter(user=request.user, created_at__date=today).count() >= 4:
-            return Response({"detail": "You have reached the limit of 4 instantanes per day."}, status=status.HTTP_400_BAD_REQUEST)
+        if not request.user.unlimited_instants and InstantanePost.objects.filter(user=request.user, created_at__date=today).count() >= 10:
+            return Response({"detail": "You have reached the limit of 10 instantanes per day."}, status=status.HTTP_400_BAD_REQUEST)
         
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -89,6 +89,17 @@ class InstantaneMarkViewed(APIView):
         post = get_object_or_404(InstantanePost, pk=pk)
         InstantaneView.objects.get_or_create(post=post, user=request.user)
         return Response({"detail": "Marked as viewed"}, status=status.HTTP_200_OK)
+
+class InstantaneUnreadCountView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        today = timezone.now().date()
+        count = InstantanePost.objects.filter(created_at__date=today)\
+                                      .exclude(views__user=request.user)\
+                                      .exclude(user=request.user)\
+                                      .count()
+        return Response({"unread_count": count})
 
 class MyInstantsListView(generics.ListAPIView):
     serializer_class = InstantanePostSerializer

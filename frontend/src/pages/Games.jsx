@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Trophy, Medal } from 'lucide-react';
+import { Trophy, Medal, Users, Flower2 } from 'lucide-react';
 import './Games.css';
 
 function Games() {
   const [games, setGames] = useState([]);
   const [leaderboard, setLeaderboard] = useState([]);
+  const [activeTab, setActiveTab] = useState('BOY');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -47,12 +48,14 @@ function Games() {
   }
 
   const renderPodium = () => {
+    const filteredLeaderboard = leaderboard.filter(group => group.group_gender === activeTab);
+    
     // Need at least something to show, but optimally 3. If less than 3, just skip or handle gracefully.
     // We will place them as [2nd, 1st, 3rd] for a classic podium layout.
     const top3 = [];
-    if (leaderboard.length >= 2) top3.push(leaderboard[1]); // 2nd place
-    if (leaderboard.length >= 1) top3.push(leaderboard[0]); // 1st place
-    if (leaderboard.length >= 3) top3.push(leaderboard[2]); // 3rd place
+    if (filteredLeaderboard.length >= 2) top3.push(filteredLeaderboard[1]); // 2nd place
+    if (filteredLeaderboard.length >= 1) top3.push(filteredLeaderboard[0]); // 1st place
+    if (filteredLeaderboard.length >= 3) top3.push(filteredLeaderboard[2]); // 3rd place
 
     if (top3.length === 0) return null;
 
@@ -62,8 +65,8 @@ function Games() {
           {top3.map((group, index) => {
             // Determine actual rank based on position in our [2nd, 1st, 3rd] array
             let rank = 1;
-            if (leaderboard.length >= 2 && index === 0) rank = 2;
-            else if (leaderboard.length >= 1 && index === (leaderboard.length >= 2 ? 1 : 0)) rank = 1;
+            if (filteredLeaderboard.length >= 2 && index === 0) rank = 2;
+            else if (filteredLeaderboard.length >= 1 && index === (filteredLeaderboard.length >= 2 ? 1 : 0)) rank = 1;
             else rank = 3;
 
             return (
@@ -96,11 +99,31 @@ function Games() {
       <div className="games-hero">
         <div className="container text-center">
           <h1 className="premium-title mb-2">Camp <span className="gradient-text text-amber-500">Games</span></h1>
-          <p className="premium-subtitle">Live Patrol Leaderboard</p>
+          <p className="premium-subtitle">Live Taliaa (طليعة) Leaderboard</p>
         </div>
       </div>
 
       <div className="container pb-12">
+        <div className="gender-toggle-wrapper">
+          <div className={`gender-toggle ${activeTab === 'GIRL' ? 'active-girl' : ''}`}>
+            <div className="gender-toggle-slider"></div>
+            <button 
+              className={`gender-toggle-btn ${activeTab === 'BOY' ? 'active' : ''}`}
+              onClick={() => setActiveTab('BOY')}
+            >
+              <Users size={18} />
+              Boy Scouts
+            </button>
+            <button 
+              className={`gender-toggle-btn ${activeTab === 'GIRL' ? 'active' : ''}`}
+              onClick={() => setActiveTab('GIRL')}
+            >
+              <Flower2 size={18} />
+              Girl Scouts
+            </button>
+          </div>
+        </div>
+
         {renderPodium()}
 
         <div className="glass border-radius overflow-hidden shadow-xl leaderboard-container">
@@ -109,24 +132,27 @@ function Games() {
               <thead>
                 <tr>
                   <th className="th-rank text-center p-4">Rank</th>
-                  <th className="th-patrol p-4 min-w-200">Patrol</th>
+                  <th className="th-patrol p-4 min-w-200">Taliaa (طليعة)</th>
                   {games.map(game => (
-                    <th key={game.id} className="th-game p-4 text-center whitespace-nowrap">
-                      {game.name}
+                    <th key={game.id} className={`th-game p-4 text-center whitespace-nowrap ${game.is_bonus ? 'th-bonus' : ''}`}>
+                      <div className="flex flex-col items-center justify-center gap-1">
+                        {game.is_bonus && <span className="bonus-tag bg-amber-500/20 text-amber-500 border border-amber-500/30 text-[0.65rem] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">BONUS</span>}
+                        <span>{game.name}</span>
+                      </div>
                     </th>
                   ))}
                   <th className="th-total p-4 text-center font-bold">Total Score</th>
                 </tr>
               </thead>
               <tbody>
-                {leaderboard.map((group, index) => (
+                {leaderboard.filter(group => group.group_gender === activeTab).map((group, index) => (
                   <tr key={group.group_id} className={`tr-patrol ${index < 3 ? 'top-3-row' : ''} ${index === 0 ? 'first-place-row' : ''}`}>
                     <td data-label="Rank" className="td-rank text-center p-4 align-middle">
                       <div className="flex justify-center items-center h-full">
                         {getRankIcon(index)}
                       </div>
                     </td>
-                    <td data-label="Patrol" className="td-patrol p-4 align-middle">
+                    <td data-label="Taliaa (طليعة)" className="td-patrol p-4 align-middle">
                       <div className="flex align-center gap-3">
                         {group.group_profile && (
                           <div className="patrol-avatar flex-shrink-0">
@@ -140,8 +166,8 @@ function Games() {
                     </td>
                     
                     {games.map(game => (
-                      <td data-label={game.name} key={game.id} className="td-score text-center p-4 font-medium align-middle">
-                        <span className="score-badge">{group.scores[game.id] || '-'}</span>
+                      <td data-label={game.name} key={game.id} className={`td-score text-center p-4 font-medium align-middle ${game.is_bonus ? 'td-bonus' : ''}`}>
+                        <span className={`score-badge ${game.is_bonus ? 'score-badge-bonus' : ''}`}>{group.scores[game.id] || '-'}</span>
                       </td>
                     ))}
                     
@@ -151,10 +177,10 @@ function Games() {
                   </tr>
                 ))}
                 
-                {leaderboard.length === 0 && (
+                {leaderboard.filter(group => group.group_gender === activeTab).length === 0 && (
                   <tr>
                     <td colSpan={games.length + 3} className="text-center p-8 text-muted italic">
-                      No scores recorded yet. Let the games begin!
+                      No scores recorded yet for this category. Let the games begin!
                     </td>
                   </tr>
                 )}
