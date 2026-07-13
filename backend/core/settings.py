@@ -26,6 +26,7 @@ SECRET_KEY = 'django-insecure-&08bdz=(x8@a@pbanq1@4#-a^smdhi*fv33z=p0^kx8jb&fcsj
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
+CSRF_TRUSTED_ORIGINS = ['https://moukhayem-maamoura.duckdns.org']
 
 
 # Application definition
