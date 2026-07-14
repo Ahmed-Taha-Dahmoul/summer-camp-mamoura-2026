@@ -48,6 +48,17 @@ function Instantane() {
     return () => stopCamera();
   }, []);
 
+  // Preload the next story image for instant transitions
+  useEffect(() => {
+    if (posts.length > 0 && currentIndex < posts.length - 1) {
+      const nextImg = new window.Image();
+      const nextSrc = posts[currentIndex + 1]?.image;
+      if (nextSrc) {
+        nextImg.src = nextSrc.replace(/^https?:\/\/[^\/]+/, '');
+      }
+    }
+  }, [currentIndex, posts]);
+
   const stopCamera = () => {
     if (stream) {
       stream.getTracks().forEach(track => track.stop());
@@ -58,7 +69,7 @@ function Instantane() {
   const startCamera = async (mode = facingMode) => {
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: mode, width: { ideal: 1920 }, height: { ideal: 1920 } } 
+        video: { facingMode: mode, width: { ideal: 1080 }, height: { ideal: 1080 } } 
       });
       setStream(mediaStream);
       if (videoRef.current) {
@@ -215,7 +226,7 @@ function Instantane() {
               handleUpload(capturedFile);
             } else {
               // Fallback: toBlob returned null (happens on some iOS Safari versions)
-              const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+              const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
               const byteString = atob(dataUrl.split(',')[1]);
               const mimeString = dataUrl.split(',')[0].split(':')[1].split(';')[0];
               const ab = new ArrayBuffer(byteString.length);
@@ -227,12 +238,12 @@ function Instantane() {
               const capturedFile = new File([fallbackBlob], 'instantane.jpg', { type: 'image/jpeg' });
               handleUpload(capturedFile);
             }
-          }, 'image/jpeg', 0.92);
+          }, 'image/jpeg', 0.7);
         } catch (e) {
           // If toBlob itself throws (very old browsers), use toDataURL fallback
           setFlashEffect(false);
           try {
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
             const byteString = atob(dataUrl.split(',')[1]);
             const ab = new ArrayBuffer(byteString.length);
             const ia = new Uint8Array(ab);
@@ -385,6 +396,7 @@ function Instantane() {
                 <img 
                   src={posts[currentIndex]?.image ? posts[currentIndex].image.replace(/^https?:\/\/[^\/]+/, '') : ''} 
                   alt="Instants"
+                  loading="lazy"
                   style={{ width: '100%', height: '100%', objectFit: 'cover', filter: !hasPosted ? 'blur(4px)' : 'none' }}
                 />
                 <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.1)' }}></div>
@@ -489,8 +501,10 @@ function Instantane() {
                 >
                   <img 
                     src={post.image ? post.image.replace(/^https?:\/\/[^\/]+/, '') : ''} 
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'opacity 0.3s ease', opacity: 0 }}
                     alt="My Instant"
+                    loading="lazy"
+                    onLoad={(e) => e.target.style.opacity = 1}
                   />
                   <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '1rem 0.5rem 0.5rem 0.5rem', background: 'linear-gradient(transparent, rgba(0,0,0,0.9))', color: 'white', fontSize: '0.8rem', display: 'flex', justifyContent: 'space-between' }}>
                     <span>{new Date(post.created_at).toLocaleDateString()}</span>
@@ -512,6 +526,9 @@ function Instantane() {
                   src={selectedInstant.image ? selectedInstant.image.replace(/^https?:\/\/[^\/]+/, '') : ''} 
                   className="detail-image"
                   alt="Selected Instant"
+                  loading="lazy"
+                  style={{ transition: 'opacity 0.3s ease', opacity: 0 }}
+                  onLoad={(e) => e.target.style.opacity = 1}
                 />
               </div>
 
@@ -578,8 +595,10 @@ function Instantane() {
                 >
                   <img 
                     src={post.image ? post.image.replace(/^https?:\/\/[^\/]+/, '') : ''} 
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'opacity 0.3s ease', opacity: 0 }}
                     alt="Moderation Instant"
+                    loading="lazy"
+                    onLoad={(e) => e.target.style.opacity = 1}
                   />
                   <div style={{ position: 'absolute', top: 0, left: 0, right: 0, padding: '0.5rem', background: 'linear-gradient(rgba(0,0,0,0.8), transparent)', color: 'white', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <div className="avatar-placeholder" style={{ width: '24px', height: '24px', fontSize: '0.8rem' }}>
@@ -644,7 +663,8 @@ function Instantane() {
           <img 
             src={posts[currentIndex]?.image ? posts[currentIndex].image.replace(/^https?:\/\/[^\/]+/, '') : ''} 
             alt="Story" 
-            style={!hasPosted ? { filter: 'blur(20px) brightness(0.6)', transform: 'scale(1.1)' } : {}}
+            style={!hasPosted ? { filter: 'blur(20px) brightness(0.6)', transform: 'scale(1.1)', transition: 'opacity 0.3s ease' } : { transition: 'opacity 0.3s ease', opacity: 0 }}
+            onLoad={(e) => e.target.style.opacity = 1}
           />
           
           {/* Overlay User Info or Lock Screen */}

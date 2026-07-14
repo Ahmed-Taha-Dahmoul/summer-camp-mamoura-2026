@@ -63,9 +63,16 @@ body {
   border-radius: 40px;
   overflow: hidden;
   position: relative;
-  background: #111;
+  background: linear-gradient(110deg, #111 8%, #1a1a1a 18%, #111 33%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
   box-shadow: 0 10px 30px rgba(0,0,0,0.5);
   border-radius: 20% 18% 22% 19% / 19% 21% 18% 20%; /* Squircle */
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 .camera-viewport video, .camera-viewport img {
@@ -365,7 +372,9 @@ body {
   border-radius: 20% 18% 22% 19% / 19% 21% 18% 20%;
   overflow: hidden;
   cursor: pointer;
-  background: #111;
+  background: linear-gradient(110deg, #111 8%, #1a1a1a 18%, #111 33%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
   transition: transform 0.2s ease;
 }
 
