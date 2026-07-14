@@ -1,10 +1,44 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Camera, AlertCircle, RefreshCw, X, Plus, SwitchCamera, Grid, ZapOff, Zap, Users, Lock } from 'lucide-react';
+import { Camera, AlertCircle, RefreshCw, X, Plus, SwitchCamera, Grid, ZapOff, Zap, Users, Lock, Star, Tent, Moon, Mountain, Bird, Sun, Compass } from 'lucide-react';
 import './Instantane.css';
 
 const EMOJIS = ['❤️', '🔥', '😂', '😮'];
+
+const getThemeColor = (colorName) => {
+  switch(colorName) {
+    case 'red': return '#ef4444';
+    case 'green': return '#10b981';
+    case 'purple': return '#a855f7';
+    case 'gold': return '#f59e0b';
+    case 'blue':
+    default: return '#3b82f6';
+  }
+};
+
+const getLocalUrl = (url) => {
+  if (!url) return '';
+  try {
+    return new URL(url).pathname;
+  } catch {
+    return url.replace(/^https?:\/\/[^\/]+/, '');
+  }
+};
+
+const renderPatrolAvatar = (preset, color) => {
+  const size = 20;
+  switch(preset) {
+    case 'eagle': return <Bird size={size} color={color} />;
+    case 'wolf': return <Moon size={size} color={color} />;
+    case 'bear': return <Mountain size={size} color={color} />;
+    case 'lion': return <Sun size={size} color={color} />;
+    case 'compass': return <Compass size={size} color={color} />;
+    case 'tent': 
+    default: return <Tent size={size} color={color} />;
+  }
+};
 
 function Instantane() {
   const navigate = useNavigate();
@@ -36,6 +70,9 @@ function Instantane() {
 
   // Story state
   const [currentIndex, setCurrentIndex] = useState(0);
+  
+  // Profile Modal state
+  const [selectedProfileUser, setSelectedProfileUser] = useState(null);
   
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -682,17 +719,22 @@ function Instantane() {
               </button>
             </div>
           ) : posts[currentIndex] && (
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, padding: '1.5rem', background: 'linear-gradient(rgba(0,0,0,0.7), transparent)', display: 'flex', alignItems: 'center', gap: '0.75rem', zIndex: 10 }}>
-              {posts[currentIndex].user.profile_picture ? (
-                <img src={posts[currentIndex].user.profile_picture.replace(/^https?:\/\/[^\/]+/, '')} style={{ width: '44px', height: '44px', borderRadius: '50%', objectFit: 'cover', border: '2px solid white' }} alt="" />
+            <div 
+              style={{ position: 'absolute', top: 0, left: 0, right: 0, padding: '1.5rem', background: 'linear-gradient(rgba(0,0,0,0.7), transparent)', display: 'flex', alignItems: 'center', gap: '0.75rem', zIndex: 10, cursor: 'pointer' }}
+              onClick={(e) => { e.stopPropagation(); setSelectedProfileUser(posts[currentIndex]); }}
+            >
+              {posts[currentIndex].author_profile_picture ? (
+                <img src={getLocalUrl(posts[currentIndex].author_profile_picture)} style={{ width: '44px', height: '44px', borderRadius: '50%', objectFit: 'cover', border: '2px solid white' }} alt="" />
+              ) : posts[currentIndex].user?.profile_picture ? (
+                <img src={getLocalUrl(posts[currentIndex].user.profile_picture)} style={{ width: '44px', height: '44px', borderRadius: '50%', objectFit: 'cover', border: '2px solid white' }} alt="" />
               ) : (
                 <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: '#333', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
-                  {posts[currentIndex].user.username.charAt(0).toUpperCase()}
+                  {(posts[currentIndex].author_name || posts[currentIndex].user?.username || '?').charAt(0).toUpperCase()}
                 </div>
               )}
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <span style={{ fontWeight: 600, fontSize: '1.1rem', color: 'white', textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
-                  {posts[currentIndex].user.first_name || posts[currentIndex].user.username}
+                  {posts[currentIndex].author_full_name || posts[currentIndex].user?.first_name || posts[currentIndex].author_name || posts[currentIndex].user?.username}
                 </span>
                 <span style={{ fontSize: '0.85rem', color: '#ddd', textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>
                   {new Date(posts[currentIndex].created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
@@ -724,6 +766,89 @@ function Instantane() {
             })}
           </div>
         </div>
+      )}
+
+      {/* User Profile Modal */}
+      {selectedProfileUser && createPortal(
+        <div className="user-profile-modal-overlay" onClick={() => setSelectedProfileUser(null)}>
+          <div 
+            className="user-profile-modal-card animate-fade-in" 
+            onClick={(e) => e.stopPropagation()}
+            style={{ zIndex: 100000 }} // Ensure it appears above the story viewer overlay
+          >
+            <div 
+              className="profile-modal-glow"
+              style={{ background: `radial-gradient(circle at top, ${getThemeColor(selectedProfileUser.author_patrol_theme_color)}66 0%, transparent 80%)` }}
+            ></div>
+            
+            <button className="profile-modal-close" onClick={() => setSelectedProfileUser(null)}>
+              <X size={20} />
+            </button>
+            
+            <div 
+              className="profile-modal-avatar"
+              style={{ borderColor: '#ffffff' }}
+            >
+              {selectedProfileUser.author_profile_picture ? (
+                <img src={getLocalUrl(selectedProfileUser.author_profile_picture)} alt={selectedProfileUser.author_name} />
+              ) : selectedProfileUser.user?.profile_picture ? (
+                <img src={getLocalUrl(selectedProfileUser.user.profile_picture)} alt={selectedProfileUser.user.username} />
+              ) : (
+                <span>{(selectedProfileUser.author_name || selectedProfileUser.user?.username || '?').charAt(0).toUpperCase()}</span>
+              )}
+            </div>
+            
+            <div className="profile-modal-info">
+              <h2 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                {selectedProfileUser.author_full_name || selectedProfileUser.user?.first_name || selectedProfileUser.author_name || selectedProfileUser.user?.username}
+                {selectedProfileUser.author_patrol_theme_color === 'gold' && <Star size={20} color="#f59e0b" fill="#f59e0b" style={{ flexShrink: 0 }} />}
+              </h2>
+              <p className="username-text" style={{ color: getThemeColor(selectedProfileUser.author_patrol_theme_color) }}>
+                @{selectedProfileUser.author_name || selectedProfileUser.user?.username}
+              </p>
+              
+              <div className="profile-modal-badges">
+                <div className="badge-row">
+                  <div 
+                    className="badge-icon" 
+                    style={{ 
+                      backgroundColor: `${getThemeColor(selectedProfileUser.author_patrol_theme_color)}22`, 
+                      color: getThemeColor(selectedProfileUser.author_patrol_theme_color) 
+                    }}
+                  >
+                    <Star size={20} />
+                  </div>
+                  <div className="badge-text">
+                    <span className="badge-label">Role</span>
+                    <span className="badge-value">{selectedProfileUser.author_role || 'Unknown'}</span>
+                  </div>
+                </div>
+                
+                <div className="badge-row">
+                  <div 
+                    className="badge-icon" 
+                    style={{ 
+                      backgroundColor: `${getThemeColor(selectedProfileUser.author_patrol_theme_color)}22`
+                    }}
+                  >
+                    {renderPatrolAvatar(selectedProfileUser.author_patrol_avatar_preset, getThemeColor(selectedProfileUser.author_patrol_theme_color))}
+                  </div>
+                  <div className="badge-text">
+                    <span className="badge-label">Taliaa (طليعة)</span>
+                    <span 
+                      className="badge-value"
+                      style={{ color: getThemeColor(selectedProfileUser.author_patrol_theme_color) }}
+                    >
+                      {selectedProfileUser.author_patrol_name || 'No Patrol'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+          </div>
+        </div>,
+        document.body
       )}
 
     </div>
