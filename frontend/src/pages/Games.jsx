@@ -47,8 +47,19 @@ function Games() {
     return <div className="container text-center py-20 text-white">Loading Leaderboard...</div>;
   }
 
+  // Filter games to only show ones relevant to the active gender tab
+  const filteredGames = games.filter(game => game.gender === 'BOTH' || game.gender === activeTab);
+
+  // Calculate total score based only on the filtered games for the active tab
+  const getFilteredTotal = (group) => {
+    return filteredGames.reduce((sum, game) => sum + (group.scores[game.id] || 0), 0);
+  };
+
   const renderPodium = () => {
-    const filteredLeaderboard = leaderboard.filter(group => group.group_gender === activeTab);
+    const filteredLeaderboard = leaderboard
+      .filter(group => group.group_gender === activeTab)
+      .map(group => ({ ...group, total_score: getFilteredTotal(group) }))
+      .sort((a, b) => b.total_score - a.total_score);
     
     // Need at least something to show, but optimally 3. If less than 3, just skip or handle gracefully.
     // We will place them as [2nd, 1st, 3rd] for a classic podium layout.
@@ -133,7 +144,7 @@ function Games() {
                 <tr>
                   <th className="th-rank text-center p-4">Rank</th>
                   <th className="th-patrol p-4 min-w-200">Taliaa (طليعة)</th>
-                  {games.map(game => (
+                  {filteredGames.map(game => (
                     <th key={game.id} className={`th-game p-4 text-center whitespace-nowrap ${game.is_bonus ? 'th-bonus' : ''}`}>
                       <div className="flex flex-col items-center justify-center gap-1">
                         {game.is_bonus && <span className="bonus-tag bg-amber-500/20 text-amber-500 border border-amber-500/30 text-[0.65rem] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">BONUS</span>}
@@ -145,7 +156,11 @@ function Games() {
                 </tr>
               </thead>
               <tbody>
-                {leaderboard.filter(group => group.group_gender === activeTab).map((group, index) => (
+                {leaderboard
+                  .filter(group => group.group_gender === activeTab)
+                  .map(group => ({ ...group, total_score: getFilteredTotal(group) }))
+                  .sort((a, b) => b.total_score - a.total_score)
+                  .map((group, index) => (
                   <tr key={group.group_id} className={`tr-patrol ${index < 3 ? 'top-3-row' : ''} ${index === 0 ? 'first-place-row' : ''}`}>
                     <td data-label="Rank" className="td-rank text-center p-4 align-middle">
                       <div className="flex justify-center items-center h-full">
@@ -165,7 +180,7 @@ function Games() {
                       </div>
                     </td>
                     
-                    {games.map(game => (
+                    {filteredGames.map(game => (
                       <td data-label={game.name} key={game.id} className={`td-score text-center p-4 font-medium align-middle ${game.is_bonus ? 'td-bonus' : ''}`}>
                         <span className={`score-badge ${game.is_bonus ? 'score-badge-bonus' : ''}`}>{group.scores[game.id] || '-'}</span>
                       </td>
@@ -179,7 +194,7 @@ function Games() {
                 
                 {leaderboard.filter(group => group.group_gender === activeTab).length === 0 && (
                   <tr>
-                    <td colSpan={games.length + 3} className="text-center p-8 text-muted italic">
+                    <td colSpan={filteredGames.length + 3} className="text-center p-8 text-muted italic">
                       No scores recorded yet for this category. Let the games begin!
                     </td>
                   </tr>

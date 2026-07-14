@@ -58,7 +58,13 @@ class InviteCode(models.Model):
         return self.code
 
 class Game(models.Model):
+    GENDER_CHOICES = (
+        ('BOTH', 'Both'),
+        ('BOY', 'Boy Scouts'),
+        ('GIRL', 'Girl Scouts'),
+    )
     name = models.CharField(max_length=100)
+    gender = models.CharField(max_length=4, choices=GENDER_CHOICES, default='BOTH', help_text="Which group(s) this game applies to")
     order = models.IntegerField(default=0, help_text="Order in the leaderboard columns")
     is_daily_instantane = models.BooleanField(default=False, help_text="If checked, this game automatically calculates daily Instantane reaction winners.")
     is_wheel_spinner = models.BooleanField(default=False, help_text="If checked, this game automatically tallies points won from the Wheel Spin.")
@@ -69,7 +75,7 @@ class Game(models.Model):
         ordering = ['order', 'id']
 
     def __str__(self):
-        return self.name
+        return f"{self.name} ({self.get_gender_display()})"
         
     def save(self, *args, **kwargs):
         from django.utils import timezone

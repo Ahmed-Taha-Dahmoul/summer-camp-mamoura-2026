@@ -193,7 +193,7 @@ class LeaderboardView(APIView):
         # Sort descending by total score
         leaderboard.sort(key=lambda x: x['total_score'], reverse=True)
         
-        games_data = [{'id': g.id, 'name': g.name, 'is_bonus': g.is_daily_instantane or g.is_wheel_spinner} for g in games]
+        games_data = [{'id': g.id, 'name': g.name, 'gender': g.gender, 'is_bonus': g.is_daily_instantane or g.is_wheel_spinner} for g in games]
         
         return Response({
             'games': games_data,

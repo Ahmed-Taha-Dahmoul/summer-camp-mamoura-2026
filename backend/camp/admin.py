@@ -27,8 +27,9 @@ class ScoutGroupAdmin(admin.ModelAdmin):
 
 
 class GameAdmin(admin.ModelAdmin):
-    list_display = ('name', 'order', 'is_daily_instantane', 'is_wheel_spinner', 'active_since')
-    list_editable = ('order', 'is_daily_instantane', 'is_wheel_spinner')
+    list_display = ('name', 'gender', 'order', 'is_daily_instantane', 'is_wheel_spinner', 'active_since')
+    list_editable = ('gender', 'order', 'is_daily_instantane', 'is_wheel_spinner')
+    list_filter = ('gender',)
 
 
 @admin.register(WheelSpin)
