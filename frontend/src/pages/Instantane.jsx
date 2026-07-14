@@ -206,11 +206,49 @@ function Instantane() {
       
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       
-        canvas.toBlob((blob) => {
-          const capturedFile = new File([blob], 'instantane.jpg', { type: 'image/jpeg' });
+        // Use toBlob with fallback for iOS Safari compatibility
+        try {
+          canvas.toBlob((blob) => {
+            setFlashEffect(false);
+            if (blob) {
+              const capturedFile = new File([blob], 'instantane.jpg', { type: 'image/jpeg' });
+              handleUpload(capturedFile);
+            } else {
+              // Fallback: toBlob returned null (happens on some iOS Safari versions)
+              const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+              const byteString = atob(dataUrl.split(',')[1]);
+              const mimeString = dataUrl.split(',')[0].split(':')[1].split(';')[0];
+              const ab = new ArrayBuffer(byteString.length);
+              const ia = new Uint8Array(ab);
+              for (let i = 0; i < byteString.length; i++) {
+                ia[i] = byteString.charCodeAt(i);
+              }
+              const fallbackBlob = new Blob([ab], { type: mimeString });
+              const capturedFile = new File([fallbackBlob], 'instantane.jpg', { type: 'image/jpeg' });
+              handleUpload(capturedFile);
+            }
+          }, 'image/jpeg', 0.92);
+        } catch (e) {
+          // If toBlob itself throws (very old browsers), use toDataURL fallback
           setFlashEffect(false);
-          handleUpload(capturedFile);
-        }, 'image/jpeg', 0.92);
+          try {
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+            const byteString = atob(dataUrl.split(',')[1]);
+            const ab = new ArrayBuffer(byteString.length);
+            const ia = new Uint8Array(ab);
+            for (let i = 0; i < byteString.length; i++) {
+              ia[i] = byteString.charCodeAt(i);
+            }
+            const fallbackBlob = new Blob([ab], { type: 'image/jpeg' });
+            const capturedFile = new File([fallbackBlob], 'instantane.jpg', { type: 'image/jpeg' });
+            handleUpload(capturedFile);
+          } catch (fallbackErr) {
+            console.error("Failed to capture image:", fallbackErr);
+            setError("Failed to capture photo. Please try uploading from your gallery instead.");
+          }
+        }
+      } else {
+        setFlashEffect(false);
       }
     }, 150);
   };
@@ -234,14 +272,25 @@ function Instantane() {
         headers: { 
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
-        }
+        },
+        timeout: 60000, // 60s timeout for slow mobile connections
       });
       fetchInstantanes(false); // This will refresh the feed with the new post but stay on camera
       setUploading(false);
       setCurrentIndex(0);
     } catch (err) {
       console.error("Upload error:", err);
-      setError(err.response?.data?.detail || 'Failed to upload photo.');
+      let errorMsg = 'Failed to upload photo.';
+      
+      if (err.code === 'ERR_NETWORK' || !err.response) {
+        errorMsg = 'Network error. Check your connection and try again.';
+      } else if (err.response?.status === 413) {
+        errorMsg = 'Photo is too large. Please try a smaller photo.';
+      } else if (err.response?.data?.detail) {
+        errorMsg = err.response.data.detail;
+      }
+      
+      setError(errorMsg);
       setUploading(false);
     }
   };
