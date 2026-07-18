@@ -76,12 +76,12 @@ export default function MarioPartyTimeline() {
   };
 
   if (loading && !data) {
-    return <div className="p-8 text-center glass text-white border-radius mb-8">Loading Timeline Data...</div>;
+    return <div className="p-8 text-center timeline-panel text-gray-900 border-radius mb-8">Loading Timeline Data...</div>;
   }
 
   if (!data || data.rounds.length === 0) {
     return (
-      <div className="p-8 text-center glass text-white border-radius mb-8">
+      <div className="p-8 text-center timeline-panel text-gray-900 border-radius mb-8">
         <h3>No Timeline Data</h3>
       </div>
     );
@@ -111,8 +111,8 @@ export default function MarioPartyTimeline() {
     return (
       <div ref={containerRef} className="mario-timeline-container glass border-radius overflow-hidden mb-8 timeline-intro">
         <div className="absolute top-4 right-4 z-50">
-           <button className="btn-icon bg-black-40 p-2 border-radius" onClick={toggleFullscreen} title="Toggle Fullscreen">
-             {isFullscreen ? <Minimize size={20} color="white" /> : <Maximize size={20} color="white" />}
+           <button className="btn-icon timeline-panel p-2 border-radius" onClick={toggleFullscreen} title="Toggle Fullscreen">
+             {isFullscreen ? <Minimize size={20} color="#4b5563" /> : <Maximize size={20} color="#4b5563" />}
            </button>
         </div>
         <h1>ملخص بطولة ألعاب المخيم الصيفي</h1>
@@ -137,15 +137,15 @@ export default function MarioPartyTimeline() {
     return (
       <div ref={containerRef} className="mario-timeline-container glass border-radius overflow-hidden mb-8 timeline-leaderboard">
         <div className="absolute top-4 right-4 z-50 flex gap-2">
-           <button className="btn-icon bg-black-40 p-2 border-radius" onClick={() => setViewState('TIMELINE')} title="Back to Timeline">
-             <ChevronLeft size={20} color="white" />
+           <button className="btn-icon timeline-panel p-2 border-radius" onClick={() => setViewState('TIMELINE')} title="Back to Timeline">
+             <ChevronLeft size={20} color="#4b5563" />
            </button>
-           <button className="btn-icon bg-black-40 p-2 border-radius" onClick={toggleFullscreen} title="Toggle Fullscreen">
-             {isFullscreen ? <Minimize size={20} color="white" /> : <Maximize size={20} color="white" />}
+           <button className="btn-icon timeline-panel p-2 border-radius" onClick={toggleFullscreen} title="Toggle Fullscreen">
+             {isFullscreen ? <Minimize size={20} color="#4b5563" /> : <Maximize size={20} color="#4b5563" />}
            </button>
         </div>
         
-        <h2 className="text-4xl font-bold text-white mb-2 animate-pop-in text-center" style={{ textShadow: '0 4px 15px rgba(0,0,0,0.8)' }}>
+        <h2 className="text-4xl font-bold text-gray-900 mb-2 animate-pop-in text-center">
           Final Rankings
         </h2>
         
@@ -171,8 +171,8 @@ export default function MarioPartyTimeline() {
                     {rank === 2 && <Medal size={24} className="final-badge text-gray-400" />}
                     {rank === 3 && <Medal size={24} className="final-badge text-amber-700" />}
                   </div>
-                  <span className="text-white font-bold mt-2 text-center" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>{group.name}</span>
-                  <span className="text-amber-400 font-bold mb-2">{group.final_score} pts</span>
+                  <span className="text-gray-900 font-bold mt-2 text-center">{group.name}</span>
+                  <span className="text-amber-500 font-bold mb-2">{group.final_score} pts</span>
                   <div className="final-podium-block">
                     {rank}
                   </div>
@@ -197,9 +197,9 @@ export default function MarioPartyTimeline() {
                        </span>
                      )}
                   </div>
-                  <div className="text-white font-bold text-lg">{group.name}</div>
+                  <div className="text-gray-900 font-bold text-lg">{group.name}</div>
                 </div>
-                <div className="text-amber-400 font-bold text-lg">{group.final_score} pts</div>
+                <div className="text-amber-500 font-bold text-lg">{group.final_score} pts</div>
               </div>
             ))}
           </div>
@@ -212,38 +212,38 @@ export default function MarioPartyTimeline() {
     <div ref={containerRef} className="mario-timeline-container glass border-radius overflow-hidden mb-8">
       
       {/* Header & Controls */}
-      <div className="timeline-header p-4 flex align-center justify-between" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+      <div className="timeline-header p-4 flex align-center justify-between" style={{ borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
         <div>
-          <h2 className="m-0 flex align-center gap-2 text-white font-bold text-2xl" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
+          <h2 className="m-0 flex align-center gap-2 text-gray-900 font-bold text-2xl">
             🌟 Grand Star Timeline 🌟
           </h2>
-          <p className="text-muted m-0 mt-1" style={{ color: 'rgba(255,255,255,0.7)' }}>Watch the epic race to the finish!</p>
+          <p className="text-gray-500 m-0 mt-1">Watch the epic race to the finish!</p>
         </div>
         
         <div className="flex align-center gap-4 flex-wrap">
           
-          <div className="gender-filter-wrap bg-black-40 p-1 border-radius flex">
+          <div className="gender-filter-wrap timeline-panel p-1 border-radius flex">
             <button className={`btn-filter ${genderFilter === 'ALL' ? 'active' : ''}`} onClick={() => setGenderFilter('ALL')}>Both</button>
             <button className={`btn-filter ${genderFilter === 'BOY' ? 'active' : ''}`} onClick={() => setGenderFilter('BOY')}>Boys</button>
             <button className={`btn-filter ${genderFilter === 'GIRL' ? 'active' : ''}`} onClick={() => setGenderFilter('GIRL')}>Girls</button>
           </div>
           
-          <div className="playback-controls flex align-center gap-2 bg-black-40 p-2 border-radius">
+          <div className="playback-controls flex align-center gap-2 timeline-panel p-2 border-radius">
             <button className="btn-icon" onClick={toggleFullscreen} title="Toggle Fullscreen">
-              {isFullscreen ? <Minimize size={20} color="white" /> : <Maximize size={20} color="white" />}
+              {isFullscreen ? <Minimize size={20} color="#4b5563" /> : <Maximize size={20} color="#4b5563" />}
             </button>
-            <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.2)', margin: '0 4px' }}></div>
+            <div style={{ width: '1px', height: '20px', background: 'rgba(0,0,0,0.1)', margin: '0 4px' }}></div>
             
             <button className="btn-icon" onClick={handlePrevDay} disabled={currentRoundIndex === 0} title="Previous Game">
-              <ChevronLeft size={20} color={currentRoundIndex === 0 ? 'rgba(255,255,255,0.3)' : 'white'} />
+              <ChevronLeft size={20} color={currentRoundIndex === 0 ? 'rgba(0,0,0,0.2)' : '#4b5563'} />
             </button>
 
             <button className="btn-icon" onClick={() => setCurrentRoundIndex(0)} title="Reset to Start">
-              <RotateCcw size={20} color="white" />
+              <RotateCcw size={20} color="#4b5563" />
             </button>
 
             <button className="btn-icon" onClick={handleNextDay} title={currentRoundIndex === data.rounds.length - 1 ? "Show Leaderboard" : "Next Game"}>
-              <ChevronRight size={20} color="white" />
+              <ChevronRight size={20} color="#4b5563" />
             </button>
           </div>
         </div>
@@ -307,8 +307,8 @@ export default function MarioPartyTimeline() {
                     </div>
                     
                     {/* Lane Label */}
-                    <div className="race-lane-label">
-                       <div style={{ color: themeHex }}>{currentPts}</div>
+                    <div className="race-lane-label" style={{ color: themeHex, borderColor: themeHex }}>
+                       {currentPts}
                     </div>
                   </div>
                 );
@@ -318,10 +318,10 @@ export default function MarioPartyTimeline() {
         </div>
 
         {/* Daily Summary Panel */}
-        <div className="timeline-daily-summary bg-black-40 border-radius">
+        <div className="timeline-daily-summary timeline-panel border-radius">
           <div className="summary-header flex align-center gap-2 mb-4">
             <Trophy size={20} color="var(--primary)" />
-            <h3 className="m-0 text-white font-bold">{currentRound.game_name} Results</h3>
+            <h3 className="m-0 text-gray-900 font-bold">{currentRound.game_name} Results</h3>
           </div>
           
           <div className="summary-list">
@@ -353,8 +353,8 @@ export default function MarioPartyTimeline() {
                          )}
                       </div>
                       <div>
-                        <div className="text-white font-bold text-sm">{group.name}</div>
-                        <div className="text-muted text-xs">{win.game_name}</div>
+                        <div className="text-gray-900 font-bold text-sm">{group.name}</div>
+                        <div className="text-gray-500 text-xs">{win.game_name}</div>
                       </div>
                     </div>
                     <div className="text-success font-bold text-sm">+{win.points} pts</div>
