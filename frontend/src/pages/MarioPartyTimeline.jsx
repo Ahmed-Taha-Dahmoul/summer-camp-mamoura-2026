@@ -256,11 +256,11 @@ export default function MarioPartyTimeline() {
           {/* Round Indicator (Watermark style) */}
           <div key={currentRound.game_name} className="round-watermark animate-pop-in" style={{ 
             position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-            fontSize: '6rem', fontWeight: '900', color: 'rgba(0,0,0,0.05)',
+            fontSize: '6rem', fontWeight: '900', color: '#000000',
             textAlign: 'center', pointerEvents: 'none', zIndex: 0
           }}>
             Round {currentRound.round_index}<br/>
-            <span style={{ fontSize: '0.4em', opacity: 0.7 }}>{currentRound.game_name}</span>
+            <span style={{ fontSize: '0.4em', opacity: 0.9 }}>{currentRound.game_name}</span>
           </div>
         
           <div className="graph-axes">
