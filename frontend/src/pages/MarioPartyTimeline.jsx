@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { Calendar, Play, Pause, FastForward, RotateCcw, ChevronLeft, ChevronRight, Trophy } from 'lucide-react';
+import { Calendar, Play, Pause, FastForward, RotateCcw, ChevronLeft, ChevronRight, Trophy, Medal, Maximize, Minimize } from 'lucide-react';
 import './MarioPartyTimeline.css';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
@@ -10,6 +10,9 @@ export default function MarioPartyTimeline() {
   const [loading, setLoading] = useState(false);
   const [currentRoundIndex, setCurrentRoundIndex] = useState(0);
   const [genderFilter, setGenderFilter] = useState('ALL'); // 'ALL', 'BOY', 'GIRL'
+  const [viewState, setViewState] = useState('INTRO'); // 'INTRO', 'TIMELINE', 'LEADERBOARD'
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const containerRef = useRef(null);
 
   useEffect(() => {
     fetchTimelineData();
@@ -23,6 +26,7 @@ export default function MarioPartyTimeline() {
         headers: { Authorization: `Bearer ${token}` }
       });
       setData(res.data);
+      setData(res.data);
       setCurrentRoundIndex(0);
     } catch (err) {
       console.error(err);
@@ -31,11 +35,37 @@ export default function MarioPartyTimeline() {
     }
   };
 
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      if (containerRef.current) {
+        containerRef.current.requestFullscreen().catch(err => {
+          console.error(`Error enabling full-screen mode: ${err.message}`);
+        });
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+  };
+
 
 
   const handleNextDay = () => {
-    if (data && currentRoundIndex < data.rounds.length - 1) {
-      setCurrentRoundIndex(prev => prev + 1);
+    if (data) {
+      if (currentRoundIndex < data.rounds.length - 1) {
+        setCurrentRoundIndex(prev => prev + 1);
+      } else {
+        setViewState('LEADERBOARD');
+      }
     }
   };
 
@@ -77,8 +107,109 @@ export default function MarioPartyTimeline() {
   maxPoints = Math.ceil(maxPoints * 1.1);
   if (maxPoints < 20) maxPoints = 20;
 
+  if (viewState === 'INTRO') {
+    return (
+      <div ref={containerRef} className="mario-timeline-container glass border-radius overflow-hidden mb-8 timeline-intro">
+        <div className="absolute top-4 right-4 z-50">
+           <button className="btn-icon bg-black-40 p-2 border-radius" onClick={toggleFullscreen} title="Toggle Fullscreen">
+             {isFullscreen ? <Minimize size={20} color="white" /> : <Maximize size={20} color="white" />}
+           </button>
+        </div>
+        <h1>ملخص بطولة ألعاب المخيم الصيفي</h1>
+        <button className="btn btn-primary" onClick={() => setViewState('TIMELINE')}>
+          Start Timeline
+        </button>
+      </div>
+    );
+  }
+
+  if (viewState === 'LEADERBOARD') {
+    const finalLeaderboard = [...filteredGroups].map(g => ({
+      ...g,
+      final_score: currentRound.cumulative_points[g.id] || 0
+    })).sort((a, b) => b.final_score - a.final_score);
+
+    const top3 = [];
+    if (finalLeaderboard.length >= 2) top3.push(finalLeaderboard[1]); // 2nd
+    if (finalLeaderboard.length >= 1) top3.push(finalLeaderboard[0]); // 1st
+    if (finalLeaderboard.length >= 3) top3.push(finalLeaderboard[2]); // 3rd
+
+    return (
+      <div ref={containerRef} className="mario-timeline-container glass border-radius overflow-hidden mb-8 timeline-leaderboard">
+        <div className="absolute top-4 right-4 z-50 flex gap-2">
+           <button className="btn-icon bg-black-40 p-2 border-radius" onClick={() => setViewState('TIMELINE')} title="Back to Timeline">
+             <ChevronLeft size={20} color="white" />
+           </button>
+           <button className="btn-icon bg-black-40 p-2 border-radius" onClick={toggleFullscreen} title="Toggle Fullscreen">
+             {isFullscreen ? <Minimize size={20} color="white" /> : <Maximize size={20} color="white" />}
+           </button>
+        </div>
+        
+        <h2 className="text-4xl font-bold text-white mb-2 animate-pop-in text-center" style={{ textShadow: '0 4px 15px rgba(0,0,0,0.8)' }}>
+          Final Rankings
+        </h2>
+        
+        {top3.length > 0 && (
+          <div className="final-podium-container">
+            {top3.map((group, index) => {
+              let rank = 1;
+              if (finalLeaderboard.length >= 2 && index === 0) rank = 2;
+              else if (finalLeaderboard.length >= 1 && index === (finalLeaderboard.length >= 2 ? 1 : 0)) rank = 1;
+              else rank = 3;
+
+              return (
+                <div key={group.id} className={`final-podium-step final-rank-${rank}`} style={{ animationDelay: `${index * 0.2}s` }}>
+                  <div className="final-avatar-wrap">
+                    {group.avatar ? (
+                      <img src={group.avatar} alt={group.name} className="final-avatar" />
+                    ) : (
+                      <div className="final-avatar flex align-center justify-center text-2xl font-bold text-white" style={{ display: 'flex' }}>
+                        {group.name.charAt(0)}
+                      </div>
+                    )}
+                    {rank === 1 && <Trophy size={28} className="final-badge text-amber-400" />}
+                    {rank === 2 && <Medal size={24} className="final-badge text-gray-400" />}
+                    {rank === 3 && <Medal size={24} className="final-badge text-amber-700" />}
+                  </div>
+                  <span className="text-white font-bold mt-2 text-center" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>{group.name}</span>
+                  <span className="text-amber-400 font-bold mb-2">{group.final_score} pts</span>
+                  <div className="final-podium-block">
+                    {rank}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {finalLeaderboard.length > 3 && (
+          <div className="final-list-container">
+            {finalLeaderboard.slice(3).map((group, index) => (
+              <div key={group.id} className="summary-item animate-slide-in flex align-center justify-between glass-sm p-3 border-radius" style={{ animationDelay: `${0.6 + index * 0.1}s` }}>
+                <div className="flex align-center gap-4">
+                  <span className="text-muted font-bold text-xl w-6 text-center">{index + 4}</span>
+                  <div className="summary-avatar" style={{ width: '40px', height: '40px', borderRadius: '50%', overflow: 'hidden', border: `2px solid var(--primary)` }}>
+                    {group.avatar ? (
+                       <img src={group.avatar} alt={group.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                     ) : (
+                       <span style={{ background: 'var(--primary)', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold' }}>
+                         {group.name.charAt(0)}
+                       </span>
+                     )}
+                  </div>
+                  <div className="text-white font-bold text-lg">{group.name}</div>
+                </div>
+                <div className="text-amber-400 font-bold text-lg">{group.final_score} pts</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
-    <div className="mario-timeline-container glass border-radius overflow-hidden mb-8">
+    <div ref={containerRef} className="mario-timeline-container glass border-radius overflow-hidden mb-8">
       
       {/* Header & Controls */}
       <div className="timeline-header p-4 flex align-center justify-between" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
@@ -98,16 +229,21 @@ export default function MarioPartyTimeline() {
           </div>
           
           <div className="playback-controls flex align-center gap-2 bg-black-40 p-2 border-radius">
-            <button className="btn-icon" onClick={handlePrevDay} disabled={currentRoundIndex === 0} title="Previous Day">
+            <button className="btn-icon" onClick={toggleFullscreen} title="Toggle Fullscreen">
+              {isFullscreen ? <Minimize size={20} color="white" /> : <Maximize size={20} color="white" />}
+            </button>
+            <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.2)', margin: '0 4px' }}></div>
+            
+            <button className="btn-icon" onClick={handlePrevDay} disabled={currentRoundIndex === 0} title="Previous Game">
               <ChevronLeft size={20} color={currentRoundIndex === 0 ? 'rgba(255,255,255,0.3)' : 'white'} />
             </button>
 
-            <button className="btn-icon" onClick={() => setCurrentRoundIndex(0)} title="Reset">
+            <button className="btn-icon" onClick={() => setCurrentRoundIndex(0)} title="Reset to Start">
               <RotateCcw size={20} color="white" />
             </button>
 
-            <button className="btn-icon" onClick={handleNextDay} disabled={currentRoundIndex === data.rounds.length - 1} title="Next Day">
-              <ChevronRight size={20} color={currentRoundIndex === data.rounds.length - 1 ? 'rgba(255,255,255,0.3)' : 'white'} />
+            <button className="btn-icon" onClick={handleNextDay} title={currentRoundIndex === data.rounds.length - 1 ? "Show Leaderboard" : "Next Game"}>
+              <ChevronRight size={20} color="white" />
             </button>
           </div>
         </div>
