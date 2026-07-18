@@ -256,7 +256,7 @@ export default function MarioPartyTimeline() {
           {/* Round Indicator (Watermark style) */}
           <div key={currentRound.game_name} className="round-watermark animate-pop-in" style={{ 
             position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-            fontSize: '4rem', fontWeight: '900', color: 'rgba(255,255,255,0.03)',
+            fontSize: '6rem', fontWeight: '900', color: 'rgba(0,0,0,0.05)',
             textAlign: 'center', pointerEvents: 'none', zIndex: 0
           }}>
             Round {currentRound.round_index}<br/>
@@ -285,7 +285,8 @@ export default function MarioPartyTimeline() {
                     <div 
                       className="race-bar"
                       style={{ 
-                        width: `${Math.max(1, percentage)}%`,
+                        width: `${Math.max(0, percentage)}%`,
+                        minWidth: '24px',
                         backgroundColor: themeHex,
                         boxShadow: `0 0 15px ${themeHex}80`,
                         transition: `width 500ms ease-out`,
@@ -293,7 +294,7 @@ export default function MarioPartyTimeline() {
                     >
                       {/* The Avatar Head */}
                       <div className="race-avatar-head avatar-glow" style={{ 
-                        border: `3px solid ${themeHex}`,
+                        border: `3px solid white`,
                         '--themeColor': themeHex
                       }}>
                          {group.avatar ? (
@@ -304,11 +305,11 @@ export default function MarioPartyTimeline() {
                            </span>
                          )}
                       </div>
-                    </div>
-                    
-                    {/* Lane Label */}
-                    <div className="race-lane-label" style={{ color: themeHex, borderColor: themeHex }}>
-                       {currentPts}
+                      
+                      {/* Lane Label */}
+                      <div className="race-lane-label" style={{ color: themeHex, borderColor: themeHex }}>
+                         {currentPts}
+                      </div>
                     </div>
                   </div>
                 );
