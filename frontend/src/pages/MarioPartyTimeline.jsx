@@ -118,7 +118,7 @@ export default function MarioPartyTimeline() {
         <div className="timeline-graph-wrapper">
           
           {/* Round Indicator (Watermark style) */}
-          <div className="round-watermark" style={{ 
+          <div key={currentRound.game_name} className="round-watermark animate-pop-in" style={{ 
             position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
             fontSize: '4rem', fontWeight: '900', color: 'rgba(255,255,255,0.03)',
             textAlign: 'center', pointerEvents: 'none', zIndex: 0
@@ -156,8 +156,9 @@ export default function MarioPartyTimeline() {
                       }}
                     >
                       {/* The Avatar Head */}
-                      <div className="race-avatar-head" style={{ 
+                      <div className="race-avatar-head avatar-glow" style={{ 
                         border: `3px solid ${themeHex}`,
+                        '--themeColor': themeHex
                       }}>
                          {group.avatar ? (
                            <img src={group.avatar} alt={group.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -204,7 +205,7 @@ export default function MarioPartyTimeline() {
                 const themeHex = colorMap[group.theme_color] || '#3b82f6';
 
                 return (
-                  <div key={i} className="summary-item flex align-center justify-between glass-sm p-3 border-radius mb-2" style={{ borderLeft: `4px solid ${themeHex}` }}>
+                  <div key={`${currentRoundIndex}-${win.group_id}`} className="summary-item animate-slide-in flex align-center justify-between glass-sm p-3 border-radius mb-2" style={{ borderLeft: `4px solid ${themeHex}`, animationDelay: `${i * 0.1}s` }}>
                     <div className="flex align-center gap-3">
                       <div className="summary-avatar" style={{ width: '32px', height: '32px', borderRadius: '50%', overflow: 'hidden', border: `2px solid ${themeHex}` }}>
                         {group.avatar ? (
