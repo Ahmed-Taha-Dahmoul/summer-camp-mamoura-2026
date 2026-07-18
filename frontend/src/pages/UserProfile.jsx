@@ -6,6 +6,8 @@ import './UserProfile.css';
 function UserProfile() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [saveStatus, setSaveStatus] = useState('');
+
   
   const [formData, setFormData] = useState({
     first_name: '',
@@ -48,9 +50,34 @@ function UserProfile() {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    setSaveStatus('unsaved');
   };
 
-  const handleImageChange = (e) => {
+  const handleBlur = async (e) => {
+    const { name, value } = e.target;
+    // Check if the value actually changed from the original profile
+    if (profile && profile[name] === value) return;
+
+    setSaveStatus('saving');
+    const data = new FormData();
+    data.append(name, value);
+    try {
+      await axios.patch(`/api/accounts/profile/`, data, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      setSaveStatus('saved');
+      setProfile(prev => ({...prev, [name]: value}));
+      setTimeout(() => setSaveStatus(''), 2000);
+    } catch (err) {
+      console.error('Failed to update field', err);
+      setSaveStatus('');
+    }
+  };
+
+  const handleImageChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
       setProfilePicture(file);
@@ -59,34 +86,23 @@ function UserProfile() {
         setPreviewImage(reader.result);
       };
       reader.readAsDataURL(file);
-    }
-  };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const data = new FormData();
-    data.append('first_name', formData.first_name);
-    data.append('last_name', formData.last_name);
-    data.append('email', formData.email);
-    data.append('phone_number', formData.phone_number);
-    data.append('bio', formData.bio);
-    if (profilePicture) {
-      data.append('profile_picture', profilePicture);
-    }
-
-    try {
-      await axios.patch(`/api/accounts/profile/`, data, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-      alert('Profile updated successfully!');
-      window.location.reload();
-    } catch (err) {
-      console.error(err.response?.data || err);
-      const errorMsg = err.response?.data ? JSON.stringify(err.response.data) : err.message;
-      alert('Failed to update profile: ' + errorMsg);
+      setSaveStatus('saving');
+      const data = new FormData();
+      data.append('profile_picture', file);
+      try {
+        await axios.patch(`/api/accounts/profile/`, data, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+        setSaveStatus('saved');
+        setTimeout(() => setSaveStatus(''), 2000);
+      } catch (err) {
+        console.error('Failed to update profile picture', err);
+        setSaveStatus('');
+      }
     }
   };
 
@@ -129,28 +145,33 @@ function UserProfile() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="profile-form">
+      <div className="profile-form">
+        <div style={{ display: 'flex', justifyContent: 'center', height: '24px', marginBottom: '16px', color: '#888', fontSize: '0.9rem' }}>
+          {saveStatus === 'saving' && <span>Saving...</span>}
+          {saveStatus === 'saved' && <span style={{ color: '#4caf50' }}>All changes saved.</span>}
+        </div>
+        
         <div className="settings-section">
           <h3 className="settings-section-title">Account Details</h3>
           <div className="settings-group">
             <div className="settings-row">
               <label>First Name</label>
-              <input type="text" name="first_name" value={formData.first_name} onChange={handleChange} placeholder="First Name" />
+              <input type="text" name="first_name" value={formData.first_name} onChange={handleChange} onBlur={handleBlur} placeholder="First Name" />
             </div>
             <div className="settings-divider"></div>
             <div className="settings-row">
               <label>Last Name</label>
-              <input type="text" name="last_name" value={formData.last_name} onChange={handleChange} placeholder="Last Name" />
+              <input type="text" name="last_name" value={formData.last_name} onChange={handleChange} onBlur={handleBlur} placeholder="Last Name" />
             </div>
             <div className="settings-divider"></div>
             <div className="settings-row">
               <label>Email</label>
-              <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="Email Address" />
+              <input type="email" name="email" value={formData.email} onChange={handleChange} onBlur={handleBlur} placeholder="Email Address" />
             </div>
             <div className="settings-divider"></div>
             <div className="settings-row">
               <label>Phone</label>
-              <input type="tel" name="phone_number" value={formData.phone_number} onChange={handleChange} placeholder="+216..." />
+              <input type="tel" name="phone_number" value={formData.phone_number} onChange={handleChange} onBlur={handleBlur} placeholder="+216..." />
             </div>
           </div>
         </div>
@@ -162,20 +183,14 @@ function UserProfile() {
               name="bio" 
               value={formData.bio} 
               onChange={handleChange} 
+              onBlur={handleBlur}
               className="settings-textarea"
               rows={4}
               placeholder="Tell everyone a little bit about yourself..."
             />
           </div>
         </div>
-
-        <div className="settings-section mt-6 px-4">
-          <button type="submit" className="btn btn-secondary w-full" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', padding: '1rem', borderRadius: '12px', fontSize: '1rem', fontWeight: 600 }}>
-            <Save size={20} />
-            <span>Save Changes</span>
-          </button>
-        </div>
-      </form>
+      </div>
 
       <div className="settings-section mt-8">
         <div className="settings-group">

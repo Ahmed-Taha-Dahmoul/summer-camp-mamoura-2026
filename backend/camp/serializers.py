@@ -42,3 +42,20 @@ class InviteCodeSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ('code', 'group', 'is_used')
 
+from .models import PianoScore
+class PianoScoreSerializer(serializers.ModelSerializer):
+    username = serializers.ReadOnlyField(source='user.username')
+    profile_picture = serializers.SerializerMethodField()
+
+    class Meta:
+        model = PianoScore
+        fields = ['id', 'username', 'profile_picture', 'score', 'created_at']
+
+    def get_profile_picture(self, obj):
+        try:
+            if obj.user.profile_picture:
+                return obj.user.profile_picture.url
+        except:
+            pass
+        return None
+

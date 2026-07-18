@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import ScoutGroupViewSet, ScoutProfileViewSet, InviteCodeViewSet, LeaderboardView, WheelStatusView, SpinWheelView, WheelRecentWinnersView, TimelineView
+from .views import ScoutGroupViewSet, ScoutProfileViewSet, InviteCodeViewSet, LeaderboardView, WheelStatusView, SpinWheelView, WheelRecentWinnersView, TimelineView, PianoScoreView
 
 router = DefaultRouter()
 router.register(r'groups', ScoutGroupViewSet)
@@ -13,5 +13,6 @@ urlpatterns = [
     path('spin-wheel/', SpinWheelView.as_view(), name='spin-wheel'),
     path('wheel-winners/', WheelRecentWinnersView.as_view(), name='wheel-winners'),
     path('timeline/', TimelineView.as_view(), name='timeline'),
+    path('piano-scores/', PianoScoreView.as_view(), name='piano-scores'),
     path('', include(router.urls)),
 ]

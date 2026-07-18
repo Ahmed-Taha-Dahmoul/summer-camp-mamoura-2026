@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { Calendar, Play, Pause, FastForward, RotateCcw } from 'lucide-react';
+import { Calendar, Play, Pause, FastForward, RotateCcw, ChevronLeft, ChevronRight, Trophy } from 'lucide-react';
 import './MarioPartyTimeline.css';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
@@ -11,6 +11,7 @@ export default function MarioPartyTimeline() {
   const [loading, setLoading] = useState(false);
   const [currentRoundIndex, setCurrentRoundIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [genderFilter, setGenderFilter] = useState('ALL'); // 'ALL', 'BOY', 'GIRL'
   
   // Animation speed control
   const [speed, setSpeed] = useState(1500); 
@@ -60,6 +61,18 @@ export default function MarioPartyTimeline() {
     setIsPlaying(!isPlaying);
   };
 
+  const handleNextDay = () => {
+    if (data && currentRoundIndex < data.rounds.length - 1) {
+      setCurrentRoundIndex(prev => prev + 1);
+    }
+  };
+
+  const handlePrevDay = () => {
+    if (currentRoundIndex > 0) {
+      setCurrentRoundIndex(prev => prev - 1);
+    }
+  };
+
   if (loading && !data) {
     return <div className="p-8 text-center glass text-white border-radius mb-8">Loading Timeline Data...</div>;
   }
@@ -73,10 +86,19 @@ export default function MarioPartyTimeline() {
     );
   }
 
-  // Calculate max points for scale
+  const currentRound = data.rounds[currentRoundIndex];
+  
+  // Filter groups
+  const filteredGroups = data.groups.filter(g => {
+    if (genderFilter === 'ALL') return true;
+    return g.gender === genderFilter;
+  });
+
+  // Calculate max points for scale based on filtered groups
   let maxPoints = 10;
   data.rounds.forEach(r => {
-    Object.values(r.cumulative_points).forEach(pts => {
+    filteredGroups.forEach(g => {
+      const pts = r.cumulative_points[g.id] || 0;
       if (pts > maxPoints) maxPoints = pts;
     });
   });
@@ -84,8 +106,6 @@ export default function MarioPartyTimeline() {
   maxPoints = Math.ceil(maxPoints * 1.1);
   if (maxPoints < 20) maxPoints = 20;
 
-  const currentRound = data.rounds[currentRoundIndex];
-  
   return (
     <div className="mario-timeline-container glass border-radius overflow-hidden mb-8">
       
@@ -98,7 +118,14 @@ export default function MarioPartyTimeline() {
           <p className="text-muted m-0 mt-1" style={{ color: 'rgba(255,255,255,0.7)' }}>Watch the epic race to the finish!</p>
         </div>
         
-        <div className="flex align-center gap-4">
+        <div className="flex align-center gap-4 flex-wrap">
+          
+          <div className="gender-filter-wrap bg-black-40 p-1 border-radius flex">
+            <button className={`btn-filter ${genderFilter === 'ALL' ? 'active' : ''}`} onClick={() => setGenderFilter('ALL')}>Both</button>
+            <button className={`btn-filter ${genderFilter === 'BOY' ? 'active' : ''}`} onClick={() => setGenderFilter('BOY')}>Boys</button>
+            <button className={`btn-filter ${genderFilter === 'GIRL' ? 'active' : ''}`} onClick={() => setGenderFilter('GIRL')}>Girls</button>
+          </div>
+
           <div className="date-picker-wrap flex align-center gap-2">
             <Calendar size={18} className="text-muted" style={{ color: 'rgba(255,255,255,0.7)' }} />
             <input 
@@ -111,6 +138,10 @@ export default function MarioPartyTimeline() {
           </div>
           
           <div className="playback-controls flex align-center gap-2 bg-black-40 p-2 border-radius">
+            <button className="btn-icon" onClick={handlePrevDay} disabled={currentRoundIndex === 0} title="Previous Day">
+              <ChevronLeft size={20} color={currentRoundIndex === 0 ? 'rgba(255,255,255,0.3)' : 'white'} />
+            </button>
+
             <button className="btn-icon" onClick={() => setCurrentRoundIndex(0)} title="Reset">
               <RotateCcw size={20} color="white" />
             </button>
@@ -120,84 +151,131 @@ export default function MarioPartyTimeline() {
             <button className="btn-icon" onClick={() => setSpeed(speed === 1500 ? 500 : 1500)} title="Speed">
               <FastForward size={20} color={speed === 500 ? 'var(--primary)' : 'white'} />
             </button>
+
+            <button className="btn-icon" onClick={handleNextDay} disabled={currentRoundIndex === data.rounds.length - 1} title="Next Day">
+              <ChevronRight size={20} color={currentRoundIndex === data.rounds.length - 1 ? 'rgba(255,255,255,0.3)' : 'white'} />
+            </button>
           </div>
         </div>
       </div>
       
-      {/* Visual Timeline SVG Graph */}
-      <div className="timeline-graph-wrapper" style={{ position: 'relative', height: '500px', width: '100%', padding: '2rem 4rem' }}>
+      <div className="timeline-body-wrapper">
+        {/* Visual Timeline SVG Graph */}
+        <div className="timeline-graph-wrapper">
+          
+          {/* Round Indicator (Watermark style) */}
+          <div className="round-watermark" style={{ 
+            position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+            fontSize: '4rem', fontWeight: '900', color: 'rgba(255,255,255,0.03)',
+            textAlign: 'center', pointerEvents: 'none', zIndex: 0
+          }}>
+            Round {currentRound.round_index}<br/>
+            <span style={{ fontSize: '0.4em', opacity: 0.7 }}>{currentRound.date}</span>
+          </div>
         
-        {/* Round Indicator (Watermark style) */}
-        <div className="round-watermark" style={{ 
-          position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-          fontSize: '4rem', fontWeight: '900', color: 'rgba(255,255,255,0.03)',
-          textAlign: 'center', pointerEvents: 'none', zIndex: 0
-        }}>
-          Round {currentRound.round_index}<br/>
-          <span style={{ fontSize: '0.4em', opacity: 0.7 }}>{currentRound.date}</span>
-        </div>
-      
-        <div className="graph-axes" style={{ position: 'relative', height: '100%', width: '100%', borderLeft: '2px solid rgba(255,255,255,0.3)', display: 'flex', flexDirection: 'column', justifyContent: 'space-around', zIndex: 10 }}>
-          {/* Group Bars (Race Mode) */}
-          <div className="race-track-container" style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-around' }}>
-            {data.groups.map((group, idx) => {
-              const currentPts = currentRound.cumulative_points[group.id] || 0;
-              const percentage = (currentPts / maxPoints) * 100;
-              
-              const colorMap = {
-                'red': '#ef4444',
-                'green': '#10b981',
-                'purple': '#a855f7',
-                'gold': '#f59e0b',
-                'blue': '#3b82f6'
-              };
-              const themeHex = colorMap[group.theme_color] || '#3b82f6';
-              
-              return (
-                <div key={group.id} className="race-lane" style={{ position: 'relative', width: '100%', height: '40px', display: 'flex', alignItems: 'center' }}>
-                  
-                  {/* The Bar */}
-                  <div 
-                    className="race-bar"
-                    style={{ 
-                      width: `${Math.max(1, percentage)}%`,
-                      height: '24px',
-                      backgroundColor: themeHex,
-                      boxShadow: `0 0 15px ${themeHex}80`,
-                      borderRadius: '0 12px 12px 0',
-                      transition: `width ${speed}ms linear`,
-                      position: 'relative'
-                    }}
-                  >
-                    {/* The Avatar Head */}
-                    <div className="race-avatar-head" style={{ 
-                      position: 'absolute', right: '-24px', top: '50%', transform: 'translateY(-50%)',
-                      width: '48px', height: '48px', borderRadius: '50%',
-                      border: `3px solid ${themeHex}`,
-                      background: '#111',
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
-                      overflow: 'hidden',
-                      zIndex: 20
-                    }}>
-                       {group.avatar ? (
-                         <img src={group.avatar} alt={group.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                       ) : (
-                         <span style={{ background: themeHex, width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold', fontSize: '1.2rem' }}>
-                           {group.name.charAt(0)}
-                         </span>
-                       )}
+          <div className="graph-axes">
+            {/* Group Bars (Race Mode) */}
+            <div className="race-track-container">
+              {filteredGroups.map((group, idx) => {
+                const currentPts = currentRound.cumulative_points[group.id] || 0;
+                const percentage = (currentPts / maxPoints) * 100;
+                
+                const colorMap = {
+                  'red': '#ef4444',
+                  'green': '#10b981',
+                  'purple': '#a855f7',
+                  'gold': '#f59e0b',
+                  'blue': '#3b82f6'
+                };
+                const themeHex = colorMap[group.theme_color] || '#3b82f6';
+                
+                return (
+                  <div key={group.id} className="race-lane">
+                    {/* The Bar */}
+                    <div 
+                      className="race-bar"
+                      style={{ 
+                        width: `${Math.max(1, percentage)}%`,
+                        backgroundColor: themeHex,
+                        boxShadow: `0 0 15px ${themeHex}80`,
+                        transition: `width ${speed}ms linear`,
+                      }}
+                    >
+                      {/* The Avatar Head */}
+                      <div className="race-avatar-head" style={{ 
+                        border: `3px solid ${themeHex}`,
+                      }}>
+                         {group.avatar ? (
+                           <img src={group.avatar} alt={group.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                         ) : (
+                           <span style={{ background: themeHex, width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold', fontSize: '1.2rem' }}>
+                             {group.name.charAt(0)}
+                           </span>
+                         )}
+                      </div>
+                    </div>
+                    
+                    {/* Lane Label */}
+                    <div className="race-lane-label">
+                       <div style={{ color: themeHex }}>{currentPts}</div>
                     </div>
                   </div>
-                  
-                  {/* Lane Label */}
-                  <div className="race-lane-label" style={{ position: 'absolute', left: '-4rem', color: 'rgba(255,255,255,0.8)', fontSize: '0.9rem', width: '3.5rem', textAlign: 'right', fontWeight: 'bold' }}>
-                     <div style={{ color: themeHex, fontSize: '1.1rem', marginBottom: '-4px' }}>{currentPts}</div>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </div>
+
+        {/* Daily Summary Panel */}
+        <div className="timeline-daily-summary bg-black-40 border-radius">
+          <div className="summary-header flex align-center gap-2 mb-4">
+            <Trophy size={20} color="var(--primary)" />
+            <h3 className="m-0 text-white font-bold">Today's Victories</h3>
+          </div>
+          
+          <div className="summary-list">
+            {currentRound.won_games && currentRound.won_games.length > 0 ? (
+              currentRound.won_games.map((win, i) => {
+                const group = data.groups.find(g => g.id === win.group_id);
+                if (!group) return null;
+                if (genderFilter !== 'ALL' && group.gender !== genderFilter) return null;
+                
+                const colorMap = {
+                  'red': '#ef4444',
+                  'green': '#10b981',
+                  'purple': '#a855f7',
+                  'gold': '#f59e0b',
+                  'blue': '#3b82f6'
+                };
+                const themeHex = colorMap[group.theme_color] || '#3b82f6';
+
+                return (
+                  <div key={i} className="summary-item flex align-center justify-between glass-sm p-3 border-radius mb-2" style={{ borderLeft: `4px solid ${themeHex}` }}>
+                    <div className="flex align-center gap-3">
+                      <div className="summary-avatar" style={{ width: '32px', height: '32px', borderRadius: '50%', overflow: 'hidden', border: `2px solid ${themeHex}` }}>
+                        {group.avatar ? (
+                           <img src={group.avatar} alt={group.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                         ) : (
+                           <span style={{ background: themeHex, width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold', fontSize: '0.8rem' }}>
+                             {group.name.charAt(0)}
+                           </span>
+                         )}
+                      </div>
+                      <div>
+                        <div className="text-white font-bold text-sm">{group.name}</div>
+                        <div className="text-muted text-xs">{win.game_name}</div>
+                      </div>
+                    </div>
+                    <div className="text-success font-bold text-sm">+{win.points} pts</div>
+                  </div>
+                )
+              })
+            ) : (
+              <div className="text-center text-muted p-4">No points awarded on this day.</div>
+            )}
+          </div>
+        </div>
+
       </div>
       
     </div>

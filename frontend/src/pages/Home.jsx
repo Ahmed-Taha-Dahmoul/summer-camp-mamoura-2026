@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { MapPin, Calendar, Coins, Tent, Zap, Navigation, Smile, Phone, Star, ArrowDown, Users, MessageSquare, Camera, User, Trophy, Dices } from 'lucide-react';
+import { MapPin, Calendar, Coins, Tent, Zap, Navigation, Smile, Phone, Star, ArrowDown, Users, MessageSquare, Camera, User, Trophy, Dices, Gamepad2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Forum from './Forum';
 import './Home.css';
@@ -82,6 +82,9 @@ function Home() {
               </Link>
               <Link to="/wheel" className="quick-action-btn qa-red">
                 <Dices size={18} /> <span>Roulette</span>
+              </Link>
+              <Link to="/piano" className="quick-action-btn qa-blue" style={{ background: 'var(--blue)' }}>
+                <Gamepad2 size={18} /> <span>Piano Tiles</span>
               </Link>
             </div>
           </div>

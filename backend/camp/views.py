@@ -285,7 +285,8 @@ class TimelineView(APIView):
                 'id': g.id,
                 'name': g.name,
                 'avatar': request.build_absolute_uri(g.profile_picture.url) if g.profile_picture else None,
-                'theme_color': g.theme_color
+                'theme_color': g.theme_color,
+                'gender': getattr(g.leader, 'gender', 'BOTH')
             })
             
         today = timezone.now().date()
@@ -307,15 +308,28 @@ class TimelineView(APIView):
                 end_dt = timezone.make_aware(datetime.combine(current_date, time(23, 59, 59, 999999)))
                 
             round_points = {g.id: 0 for g in groups}
+            won_games = []
             
-            scores = GameScore.objects.filter(created_at__gte=start_dt, created_at__lte=end_dt)
+            scores = GameScore.objects.filter(created_at__gte=start_dt, created_at__lte=end_dt).select_related('game')
             for s in scores:
                 round_points[s.group_id] += s.points
+                if s.points > 0:
+                    won_games.append({
+                        'group_id': s.group_id,
+                        'game_name': s.game.name,
+                        'points': s.points
+                    })
                 
             spins = WheelSpin.objects.filter(created_at__gte=start_dt, created_at__lte=end_dt)
             for s in spins:
                 if s.group_id:
                     round_points[s.group_id] += s.points_won
+                    if s.points_won > 0:
+                        won_games.append({
+                            'group_id': s.group_id,
+                            'game_name': 'Wheel Spin',
+                            'points': s.points_won
+                        })
                     
             for gid in cumulative_points:
                 cumulative_points[gid] += round_points.get(gid, 0)
@@ -324,7 +338,8 @@ class TimelineView(APIView):
                 'round_index': i + 1,
                 'date': current_date.strftime('%Y-%m-%d'),
                 'round_points': round_points.copy(),
-                'cumulative_points': cumulative_points.copy()
+                'cumulative_points': cumulative_points.copy(),
+                'won_games': won_games
             })
             
         return Response({
@@ -332,3 +347,67 @@ class TimelineView(APIView):
             'rounds': rounds
         })
 
+
+from .models import PianoScore
+from .serializers import PianoScoreSerializer
+
+class PianoScoreView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        today = timezone.now().date()
+        attempts_today = PianoScore.objects.filter(user=request.user, created_at__date=today).count()
+        remaining_plays = max(0, 3 - attempts_today)
+
+        all_scores = PianoScore.objects.all().order_by('-score', 'created_at')
+        leaderboard = []
+        seen_users = set()
+
+        user_rank = None
+        user_best_score = 0
+        current_rank = 1
+
+        for s in all_scores:
+            if s.user_id not in seen_users:
+                seen_users.add(s.user_id)
+                if s.user_id == request.user.id:
+                    user_rank = current_rank
+                    user_best_score = s.score
+                    
+                if len(leaderboard) < 5:
+                    leaderboard.append(s)
+                    
+                current_rank += 1
+
+        serializer = PianoScoreSerializer(leaderboard, many=True)
+        return Response({
+            'leaderboard': serializer.data,
+            'remaining_plays': remaining_plays,
+            'user_rank': user_rank,
+            'user_best_score': user_best_score
+        })
+
+    def post(self, request):
+        today = timezone.now().date()
+        attempts_today = PianoScore.objects.filter(user=request.user, created_at__date=today).count()
+        
+        if attempts_today >= 3:
+            return Response({"error": "You have reached your daily limit of 3 plays."}, status=status.HTTP_403_FORBIDDEN)
+
+        score_val = request.data.get('score', 0)
+        try:
+            score_val = int(score_val)
+        except ValueError:
+            return Response({"error": "Invalid score"}, status=status.HTTP_400_BAD_REQUEST)
+            
+        new_score = PianoScore.objects.create(user=request.user, score=score_val)
+        
+        # Determine if it's a new high score for the user
+        existing_best = PianoScore.objects.filter(user=request.user).order_by('-score').first()
+        is_high_score = existing_best and existing_best.id == new_score.id
+        
+        return Response({
+            "status": "Score saved!", 
+            "score": new_score.score,
+            "is_high_score": is_high_score
+        })

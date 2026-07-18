@@ -126,3 +126,14 @@ class EarnedBadge(models.Model):
 
     def __str__(self):
         return f"{self.group.name} earned {self.badge.name}"
+
+class PianoScore(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='piano_scores')
+    score = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-score']
+
+    def __str__(self):
+        return f"{self.user.username} - {self.score}"
