@@ -7,20 +7,19 @@ const API_URL = import.meta.env.VITE_API_URL || '';
 
 export default function MarioPartyTimeline() {
   const [data, setData] = useState(null);
-  const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
   const [loading, setLoading] = useState(false);
   const [currentRoundIndex, setCurrentRoundIndex] = useState(0);
   const [genderFilter, setGenderFilter] = useState('ALL'); // 'ALL', 'BOY', 'GIRL'
 
   useEffect(() => {
     fetchTimelineData();
-  }, [startDate]);
+  }, []);
 
   const fetchTimelineData = async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('access_token');
-      const res = await axios.get(`${API_URL}/api/camp/timeline/?start_date=${startDate}`, {
+      const res = await axios.get(`${API_URL}/api/camp/timeline/`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setData(res.data);
@@ -54,7 +53,6 @@ export default function MarioPartyTimeline() {
     return (
       <div className="p-8 text-center glass text-white border-radius mb-8">
         <h3>No Timeline Data</h3>
-        <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="premium-select mt-4" style={{ background: '#1c1c1e', color: 'white' }} />
       </div>
     );
   }
@@ -98,17 +96,6 @@ export default function MarioPartyTimeline() {
             <button className={`btn-filter ${genderFilter === 'BOY' ? 'active' : ''}`} onClick={() => setGenderFilter('BOY')}>Boys</button>
             <button className={`btn-filter ${genderFilter === 'GIRL' ? 'active' : ''}`} onClick={() => setGenderFilter('GIRL')}>Girls</button>
           </div>
-
-          <div className="date-picker-wrap flex align-center gap-2">
-            <Calendar size={18} className="text-muted" style={{ color: 'rgba(255,255,255,0.7)' }} />
-            <input 
-              type="date" 
-              value={startDate} 
-              onChange={e => setStartDate(e.target.value)} 
-              className="premium-select"
-              style={{ padding: '0.4rem 0.8rem', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.2)', color: 'white' }}
-            />
-          </div>
           
           <div className="playback-controls flex align-center gap-2 bg-black-40 p-2 border-radius">
             <button className="btn-icon" onClick={handlePrevDay} disabled={currentRoundIndex === 0} title="Previous Day">
@@ -137,7 +124,7 @@ export default function MarioPartyTimeline() {
             textAlign: 'center', pointerEvents: 'none', zIndex: 0
           }}>
             Round {currentRound.round_index}<br/>
-            <span style={{ fontSize: '0.4em', opacity: 0.7 }}>{currentRound.date}</span>
+            <span style={{ fontSize: '0.4em', opacity: 0.7 }}>{currentRound.game_name}</span>
           </div>
         
           <div className="graph-axes">
@@ -197,7 +184,7 @@ export default function MarioPartyTimeline() {
         <div className="timeline-daily-summary bg-black-40 border-radius">
           <div className="summary-header flex align-center gap-2 mb-4">
             <Trophy size={20} color="var(--primary)" />
-            <h3 className="m-0 text-white font-bold">Today's Victories</h3>
+            <h3 className="m-0 text-white font-bold">{currentRound.game_name} Results</h3>
           </div>
           
           <div className="summary-list">
@@ -238,7 +225,7 @@ export default function MarioPartyTimeline() {
                 )
               })
             ) : (
-              <div className="text-center text-muted p-4">No points awarded on this day.</div>
+              <div className="text-center text-muted p-4">No points awarded for this game.</div>
             )}
           </div>
         </div>

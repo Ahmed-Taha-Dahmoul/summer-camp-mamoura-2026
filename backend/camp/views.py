@@ -272,12 +272,6 @@ class TimelineView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        start_date_str = request.query_params.get('start_date')
-        if not start_date_str:
-            start_date = timezone.now().date()
-        else:
-            start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
-            
         groups = ScoutGroup.objects.all()
         group_data = []
         for g in groups:
@@ -289,54 +283,37 @@ class TimelineView(APIView):
                 'gender': getattr(g.leader, 'gender', 'BOTH')
             })
             
-        today = timezone.now().date()
-        if today < start_date:
-            days_diff = 0
-        else:
-            days_diff = (today - start_date).days
-            
+        games = Game.objects.all().order_by('order', 'id')
         rounds = []
         cumulative_points = {g.id: 0 for g in groups}
         
-        for i in range(days_diff + 1):
-            current_date = start_date + timedelta(days=i)
-            if i == 0:
-                start_dt = timezone.make_aware(datetime.combine(current_date, time(14, 0)))
-                end_dt = timezone.make_aware(datetime.combine(current_date, time(23, 59, 59, 999999)))
-            else:
-                start_dt = timezone.make_aware(datetime.combine(current_date, time(0, 0)))
-                end_dt = timezone.make_aware(datetime.combine(current_date, time(23, 59, 59, 999999)))
-                
+        all_scores = GameScore.objects.select_related('game').all()
+        score_map = {}
+        for s in all_scores:
+            if s.game_id not in score_map:
+                score_map[s.game_id] = []
+            score_map[s.game_id].append(s)
+            
+        for i, game in enumerate(games):
             round_points = {g.id: 0 for g in groups}
             won_games = []
             
-            scores = GameScore.objects.filter(created_at__gte=start_dt, created_at__lte=end_dt).select_related('game')
-            for s in scores:
+            game_scores = score_map.get(game.id, [])
+            for s in game_scores:
                 round_points[s.group_id] += s.points
                 if s.points > 0:
                     won_games.append({
                         'group_id': s.group_id,
-                        'game_name': s.game.name,
+                        'game_name': game.name,
                         'points': s.points
                     })
-                
-            spins = WheelSpin.objects.filter(created_at__gte=start_dt, created_at__lte=end_dt)
-            for s in spins:
-                if s.group_id:
-                    round_points[s.group_id] += s.points_won
-                    if s.points_won > 0:
-                        won_games.append({
-                            'group_id': s.group_id,
-                            'game_name': 'Wheel Spin',
-                            'points': s.points_won
-                        })
                     
             for gid in cumulative_points:
                 cumulative_points[gid] += round_points.get(gid, 0)
                 
             rounds.append({
                 'round_index': i + 1,
-                'date': current_date.strftime('%Y-%m-%d'),
+                'game_name': game.name,
                 'round_points': round_points.copy(),
                 'cumulative_points': cumulative_points.copy(),
                 'won_games': won_games
