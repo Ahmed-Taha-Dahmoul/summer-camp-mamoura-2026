@@ -10,11 +10,7 @@ export default function MarioPartyTimeline() {
   const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
   const [loading, setLoading] = useState(false);
   const [currentRoundIndex, setCurrentRoundIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
   const [genderFilter, setGenderFilter] = useState('ALL'); // 'ALL', 'BOY', 'GIRL'
-  
-  // Animation speed control
-  const [speed, setSpeed] = useState(1500); 
 
   useEffect(() => {
     fetchTimelineData();
@@ -29,7 +25,6 @@ export default function MarioPartyTimeline() {
       });
       setData(res.data);
       setCurrentRoundIndex(0);
-      setIsPlaying(false);
     } catch (err) {
       console.error(err);
     } finally {
@@ -37,29 +32,7 @@ export default function MarioPartyTimeline() {
     }
   };
 
-  // Playback logic
-  useEffect(() => {
-    let interval = null;
-    if (isPlaying && data && currentRoundIndex < data.rounds.length - 1) {
-      interval = setInterval(() => {
-        setCurrentRoundIndex(prev => {
-          if (prev >= data.rounds.length - 2) {
-            setIsPlaying(false);
-            return data.rounds.length - 1;
-          }
-          return prev + 1;
-        });
-      }, speed);
-    }
-    return () => clearInterval(interval);
-  }, [isPlaying, currentRoundIndex, data, speed]);
 
-  const handlePlayPause = () => {
-    if (currentRoundIndex >= (data?.rounds?.length || 1) - 1) {
-      setCurrentRoundIndex(0);
-    }
-    setIsPlaying(!isPlaying);
-  };
 
   const handleNextDay = () => {
     if (data && currentRoundIndex < data.rounds.length - 1) {
@@ -145,12 +118,6 @@ export default function MarioPartyTimeline() {
             <button className="btn-icon" onClick={() => setCurrentRoundIndex(0)} title="Reset">
               <RotateCcw size={20} color="white" />
             </button>
-            <button className="btn btn-primary flex align-center justify-center" style={{ width: '40px', height: '40px', borderRadius: '50%', padding: 0 }} onClick={handlePlayPause}>
-              {isPlaying ? <Pause size={20} fill="white" /> : <Play size={20} fill="white" style={{ marginLeft: '3px' }} />}
-            </button>
-            <button className="btn-icon" onClick={() => setSpeed(speed === 1500 ? 500 : 1500)} title="Speed">
-              <FastForward size={20} color={speed === 500 ? 'var(--primary)' : 'white'} />
-            </button>
 
             <button className="btn-icon" onClick={handleNextDay} disabled={currentRoundIndex === data.rounds.length - 1} title="Next Day">
               <ChevronRight size={20} color={currentRoundIndex === data.rounds.length - 1 ? 'rgba(255,255,255,0.3)' : 'white'} />
@@ -198,7 +165,7 @@ export default function MarioPartyTimeline() {
                         width: `${Math.max(1, percentage)}%`,
                         backgroundColor: themeHex,
                         boxShadow: `0 0 15px ${themeHex}80`,
-                        transition: `width ${speed}ms linear`,
+                        transition: `width 500ms ease-out`,
                       }}
                     >
                       {/* The Avatar Head */}
