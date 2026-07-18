@@ -300,7 +300,7 @@ export default function MarioPartyTimeline() {
                          {group.avatar ? (
                            <img src={group.avatar} alt={group.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                          ) : (
-                           <span style={{ background: themeHex, width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold', fontSize: '1.2rem' }}>
+                           <span style={{ background: themeHex, width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold', fontSize: '1.8rem' }}>
                              {group.name.charAt(0)}
                            </span>
                          )}
@@ -320,9 +320,9 @@ export default function MarioPartyTimeline() {
 
         {/* Daily Summary Panel */}
         <div className="timeline-daily-summary timeline-panel border-radius">
-          <div className="summary-header flex align-center gap-2 mb-4">
-            <Trophy size={20} color="var(--primary)" />
-            <h3 className="m-0 text-gray-900 font-bold">{currentRound.game_name} Results</h3>
+          <div className="summary-header flex align-center gap-3 mb-6">
+            <Trophy size={28} color="var(--primary)" />
+            <h3 className="m-0 text-black font-black text-2xl" style={{ letterSpacing: '-0.5px' }}>{currentRound.game_name} Results</h3>
           </div>
           
           <div className="summary-list">
@@ -342,23 +342,23 @@ export default function MarioPartyTimeline() {
                 const themeHex = colorMap[group.theme_color] || '#3b82f6';
 
                 return (
-                  <div key={`${currentRoundIndex}-${win.group_id}`} className="summary-item animate-slide-in flex align-center justify-between glass-sm p-3 border-radius mb-2" style={{ borderLeft: `4px solid ${themeHex}`, animationDelay: `${i * 0.1}s` }}>
-                    <div className="flex align-center gap-3">
-                      <div className="summary-avatar" style={{ width: '32px', height: '32px', borderRadius: '50%', overflow: 'hidden', border: `2px solid ${themeHex}` }}>
+                  <div key={`${currentRoundIndex}-${win.group_id}`} className="summary-item animate-slide-in flex align-center justify-between glass-sm p-4 border-radius mb-3" style={{ borderLeft: `4px solid ${themeHex}`, animationDelay: `${i * 0.1}s`, background: 'rgba(0,0,0,0.02)' }}>
+                    <div className="flex align-center gap-4">
+                      <div className="summary-avatar" style={{ width: '48px', height: '48px', borderRadius: '50%', overflow: 'hidden', border: `2px solid ${themeHex}` }}>
                         {group.avatar ? (
                            <img src={group.avatar} alt={group.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                          ) : (
-                           <span style={{ background: themeHex, width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold', fontSize: '0.8rem' }}>
+                           <span style={{ background: themeHex, width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold', fontSize: '1.2rem' }}>
                              {group.name.charAt(0)}
                            </span>
                          )}
                       </div>
                       <div>
-                        <div className="text-gray-900 font-bold text-sm">{group.name}</div>
-                        <div className="text-gray-500 text-xs">{win.game_name}</div>
+                        <div className="text-black font-bold text-lg">{group.name}</div>
+                        <div className="text-gray-500 font-medium text-sm">{win.game_name}</div>
                       </div>
                     </div>
-                    <div className="text-success font-bold text-sm">+{win.points} pts</div>
+                    <div className="text-success font-black text-xl">+{win.points} pts</div>
                   </div>
                 )
               })
